@@ -1,0 +1,22 @@
+# Theme
+theme = idleToes
+
+background-opacity = 0.6
+
+background-blur = true
+
+# quick terminal
+quick-terminal-position = "bottom"
+quick-terminal-screen = "main"
+quick-terminal-animation-duration = 0
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+
+# macOS
+macos-window-shadow = false
+
+macos-titlebar-proxy-icon = hidden
+
+auto-update = download
+
+# font
+font-feature = -dlig
