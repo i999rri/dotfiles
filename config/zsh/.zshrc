@@ -1,4 +1,5 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(sheldon source)"
 alias ghostty="/Applications/Ghostty.app/Contents/MacOS/ghostty"
 alias config="vim ~/.config/ghostty/config"
 
@@ -17,3 +18,6 @@ if [ -n "$TMUX" ]; then
         esac
     }
 fi
+
+# To customize prompt, run `p10k configure` or edit ~/.config/zsh/.p10k.zsh.
+[[ ! -f ~/.config/zsh/.p10k.zsh ]] || source ~/.config/zsh/.p10k.zsh
