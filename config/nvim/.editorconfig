@@ -1,0 +1,19 @@
+root = true
+
+[*]
+# Ensure Unix-style line endings
+end_of_line = lf
+# Ensure a final newline at the end of the file
+insert_final_newline = true
+# Default character set
+charset = utf-8
+
+[*.lua]
+# Indent using spaces
+indent_style = space
+# Indent size of 4 spaces
+indent_size = 4
+# Set tab width to 4 (if tabs were used, though spaces are preferred here)
+tab_width = 4
+# Maximum line length for Lua code
+max_line_length = 120
