@@ -1,0 +1,8 @@
+  772  brew install neovim
+  837  brew install ripgrep
+  975  brew install lazygit
+  985  brew install stylua
+  986  brew install efm-langserver
+ 1011* brew install chafa
+ 1037* brew install libsixel
+ 1101* brew install luarocks
