@@ -1,5 +1,7 @@
 require("config.lazy")
 
+vim.cmd('colorscheme asiimov')
+
 vim.opt.clipboard = "unnamedplus"
 
 vim.opt.number = true
