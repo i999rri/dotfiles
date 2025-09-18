@@ -1,9 +1,7 @@
 # Theme
-theme = idleToes
 
-background-opacity = 0.6
-
-background-blur = true
+# background-opacity = 0.6
+# background-blur = true
 
 # quick terminal
 quick-terminal-position = "bottom"
@@ -20,3 +18,50 @@ auto-update = download
 
 # font
 font-feature = -dlig
+
+# Ghostty Asiimov Theme
+# CS:GO Asiimovスキンにインスパイアされたテーマ
+
+# 基本色設定
+background = f5f5f5
+foreground = 0f0f0f
+cursor-color = ff6b35
+cursor-text = f5f5f5
+
+# 選択範囲
+selection-background = ff6b35
+selection-foreground = f5f5f5
+
+# ウィンドウ設定
+# window-opacity = 0.98
+# window-padding-x = 15
+# window-padding-y = 15
+
+# フォント（お好みで変更してください）
+font-family = JetBrains Mono
+font-size = 13
+
+# ANSIカラーパレット（白背景Asiimov風）
+palette = 0=2d2d2d
+palette = 1=ff6b35
+palette = 2=4caf50
+palette = 3=ff9800
+palette = 4=2196f3
+palette = 5=e91e63
+palette = 6=00bcd4
+palette = 7=0f0f0f
+palette = 8=424242
+palette = 9=ff8c61
+palette = 10=66bb6a
+palette = 11=ffc947
+palette = 12=42a5f5
+palette = 13=ff7043
+palette = 14=26c6da
+palette = 15=1a1a1a
+
+# タブ設定は古いバージョンではサポートされていません
+# tab-bar-background = 0f0f0f
+# tab-bar-inactive-background = 2d2d2d
+# tab-bar-active-background = ff6b35
+# tab-bar-active-foreground = 0f0f0f
+# tab-bar-inactive-foreground = 9e9e9e
