@@ -59,9 +59,3 @@ palette = 13=ff7043
 palette = 14=26c6da
 palette = 15=1a1a1a
 
-# タブ設定は古いバージョンではサポートされていません
-# tab-bar-background = 0f0f0f
-# tab-bar-inactive-background = 2d2d2d
-# tab-bar-active-background = ff6b35
-# tab-bar-active-foreground = 0f0f0f
-# tab-bar-inactive-foreground = 9e9e9e
