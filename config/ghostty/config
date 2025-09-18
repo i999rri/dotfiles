@@ -10,10 +10,10 @@ quick-terminal-animation-duration = 0
 keybind = global:ctrl+grave_accent=toggle_quick_terminal
 
 # macOS
-macos-window-shadow = false
-
+# macos-window-shadow = false
 macos-titlebar-proxy-icon = hidden
-
+macos-titlebar-style = hidden
+macos-non-native-fullscreen = true
 auto-update = download
 
 # font
