@@ -42,7 +42,7 @@ selection-foreground = f5f5f5
 
 # フォント（お好みで変更してください）
 font-family = "JetBrainsMono Nerd Font Mono"
-font-size = 12
+font-size = 15 
 font-style = normal
 
 # ANSIカラーパレット（白背景Asiimov風）
