@@ -9,7 +9,7 @@ return {
         local masonLspConfig = require("mason-lspconfig")
 
 	masonLspConfig.setup({
-	automatic_enable = true,	
+	    automatic_enable = true,
 	})
     end
 }
