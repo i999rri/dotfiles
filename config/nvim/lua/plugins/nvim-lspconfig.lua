@@ -60,16 +60,16 @@ lspconfig.ts_ls.setup{
   capabilities = capabilities,
   init_options = {
     preferences = {
-      importModuleSpecifier = "relative",
-      importModuleSpecifierEnding = "index",
+      importModuleSpecifier = "non-relative",
+      importModuleSpecifierEnding = "auto",
       includePackageJsonAutoImports = "off",
     }
   },
   settings = {
     typescript = {
       preferences = {
-        importModuleSpecifier = "relative",
-        importModuleSpecifierEnding = "index"
+        importModuleSpecifier = "non-relative",
+        importModuleSpecifierEnding = "auto"
       },
       inlayHints = {
         includeInlayParameterNameHints = 'all',
@@ -83,8 +83,8 @@ lspconfig.ts_ls.setup{
     },
     javascript = {
       preferences = {
-        importModuleSpecifier = "relative",
-        importModuleSpecifierEnding = "index"
+        importModuleSpecifier = "non-relative",
+        importModuleSpecifierEnding = "auto"
       },
       inlayHints = {
         includeInlayParameterNameHints = 'all',
