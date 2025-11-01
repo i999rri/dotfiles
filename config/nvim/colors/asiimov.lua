@@ -130,7 +130,7 @@ hi('SpecialComment', { fg = colors.comment, style = 'bold' })
 hi('Debug', { fg = colors.red })
 
 -- マッチング括弧
-hi('MatchParen', { fg = colors.white, bg = colors.orange, style = 'bold' })
+hi('MatchParen', { fg = colors.orange, bg = '#e8e8e8' })
 
 -- 差分
 hi('DiffAdd', { fg = colors.green, bg = '#e8f5e8' })
