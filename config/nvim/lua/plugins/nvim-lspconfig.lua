@@ -6,11 +6,11 @@ return {
   },
   config = function()
     local lspconfig = require('lspconfig')
-    
+
     -- 共通のキーマッピング設定
     local on_attach = function(client, bufnr)
       local opts = { buffer = bufnr, silent = true }
-      
+
       -- キーマッピング
       vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
       vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
@@ -24,13 +24,13 @@ return {
         vim.lsp.buf.format { async = true }
       end, opts)
     end
-    
+
     -- 補完機能の設定（nvim-cmpを使用している場合）
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     if pcall(require, 'cmp_nvim_lsp') then
       capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
     end
-    
+
     -- C# - omnisharp
     lspconfig.omnisharp.setup{
       on_attach = on_attach,
@@ -52,7 +52,7 @@ return {
         },
       }
     }
-    
+
     -- TypeScript/JavaScript - ts_ls
     -- TypeScript/JavaScript - ts_ls
 lspconfig.ts_ls.setup{
@@ -98,7 +98,7 @@ lspconfig.ts_ls.setup{
     }
   }
 }
-    
+
     -- PHP - intelephense
     lspconfig.intelephense.setup{
       on_attach = on_attach,
@@ -120,7 +120,7 @@ lspconfig.ts_ls.setup{
         },
       }
     }
-    
+
     -- Lua - lua_ls (lua-language-server)
     lspconfig.lua_ls.setup{
       on_attach = on_attach,
