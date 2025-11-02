@@ -23,9 +23,8 @@ local efmls_config = {
   },
 }
 
-require('lspconfig').efm.setup(vim.tbl_extend('force', efmls_config, {
-  -- Pass your custom lsp config below like on_attach and capabilities
-  --
-  -- on_attach = on_attach,
-  -- capabilities = capabilities,
+vim.lsp.config('efm', vim.tbl_extend('force', efmls_config, {
+
 }))
+
+vim.lsp.enable('efm');

@@ -5,8 +5,6 @@ return {
     "hrsh7th/cmp-nvim-lsp", -- 補完機能のため（オプション）
   },
   config = function()
-    local lspconfig = require('lspconfig')
-
     -- 共通のキーマッピング設定
     local on_attach = function(client, bufnr)
       local opts = { buffer = bufnr, silent = true }
@@ -32,7 +30,8 @@ return {
     end
 
     -- C# - omnisharp
-    lspconfig.omnisharp.setup{
+    
+    vim.lsp.config('omnisharp', {
       on_attach = on_attach,
       capabilities = capabilities,
       cmd = { "dotnet", "/path/to/omnisharp/OmniSharp.dll" }, -- パスを適切に設定
@@ -51,26 +50,15 @@ return {
           EnableImportCompletion = true,
         },
       }
-    }
+    })
 
     -- TypeScript/JavaScript - ts_ls
-    -- TypeScript/JavaScript - ts_ls
-lspconfig.ts_ls.setup{
+    --
+vim.lsp.config('ts_ls', {
   on_attach = on_attach,
   capabilities = capabilities,
-  init_options = {
-    preferences = {
-      importModuleSpecifier = "non-relative",
-      importModuleSpecifierEnding = "auto",
-      includePackageJsonAutoImports = "off",
-    }
-  },
   settings = {
     typescript = {
-      preferences = {
-        importModuleSpecifier = "non-relative",
-        importModuleSpecifierEnding = "auto"
-      },
       inlayHints = {
         includeInlayParameterNameHints = 'all',
         includeInlayParameterNameHintsWhenArgumentMatchesName = false,
@@ -82,10 +70,6 @@ lspconfig.ts_ls.setup{
       }
     },
     javascript = {
-      preferences = {
-        importModuleSpecifier = "non-relative",
-        importModuleSpecifierEnding = "auto"
-      },
       inlayHints = {
         includeInlayParameterNameHints = 'all',
         includeInlayParameterNameHintsWhenArgumentMatchesName = false,
@@ -97,10 +81,9 @@ lspconfig.ts_ls.setup{
       }
     }
   }
-}
-
+})
     -- PHP - intelephense
-    lspconfig.intelephense.setup{
+    vim.lsp.config('intelephense', {
       on_attach = on_attach,
       capabilities = capabilities,
       settings = {
@@ -119,10 +102,10 @@ lspconfig.ts_ls.setup{
           },
         },
       }
-    }
+    })
 
     -- Lua - lua_ls (lua-language-server)
-    lspconfig.lua_ls.setup{
+    vim.lsp.config('lua_ls', {
       on_attach = on_attach,
       capabilities = capabilities,
       settings = {
@@ -145,6 +128,12 @@ lspconfig.ts_ls.setup{
           },
         },
       },
-    }
+    })
+
+
+    vim.lsp.enable('intelephense')
+    vim.lsp.enable('lua_ls')
+    vim.lsp.enable('ts_ls')
+    vim.lsp.enable('omnisharp')
   end,
 }
