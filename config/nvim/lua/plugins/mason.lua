@@ -5,11 +5,11 @@ return {
         { "mason-org/mason.nvim", opts = {} },
         "neovim/nvim-lspconfig",
     },
-    config = function ()
+    config = function()
         local masonLspConfig = require("mason-lspconfig")
 
-	masonLspConfig.setup({
-	    automatic_enable = true,
-	})
-    end
+        masonLspConfig.setup({
+            automatic_enable = true,
+        })
+    end,
 }
