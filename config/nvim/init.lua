@@ -10,30 +10,22 @@ vim.opt.number = true
 vim.opt.cursorline = true
 vim.opt.cursorlineopt = "number"
 
-vim.api.nvim_create_autocmd("ColorScheme", {
-    callback = function()
-        vim.cmd([[
-      highlight Normal guibg=none ctermbg=none
-      highlight NonText guibg=none ctermbg=none
-      highlight NormalNC guibg=none ctermbg=none
-      highlight NormalSB guibg=none ctermbg=none
-      highlight SignColumn guibg=none ctermbg=none
-      highlight EndOfBuffer guibg=none ctermbg=none
-      highlight LineNr guibg=none ctermbg=none
+-- @return void
+local function vim_cmd()
+    vim.cmd([[
+        highlight Normal guibg=none ctermbg=none
+        highlight NonText guibg=none ctermbg=none
+        highlight NormalNC guibg=none ctermbg=none
+        highlight NormalSB guibg=none ctermbg=none
+        highlight SignColumn guibg=none ctermbg=none
+        highlight EndOfBuffer guibg=none ctermbg=none
+        highlight LineNr guibg=none ctermbg=none
     ]])
-    end,
-})
+end
 
--- 初回適用
-vim.cmd([[
-  highlight Normal guibg=none ctermbg=none
-  highlight NonText guibg=none ctermbg=none
-  highlight NormalNC guibg=none ctermbg=none
-  highlight NormalSB guibg=none ctermbg=none
-  highlight SignColumn guibg=none ctermbg=none
-  highlight EndOfBuffer guibg=none ctermbg=none
-  highlight LineNr guibg=none ctermbg=none
-]])
+vim.api.nvim_create_autocmd("ColorScheme", { callback = vim_cmd })
+
+vim_cmd()
 
 vim.keymap.set("n", "<Leader><tab>", ":Telescope buffers<CR>", { noremap = true, silent = true })
 
