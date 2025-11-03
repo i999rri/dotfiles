@@ -182,5 +182,5 @@ hi("TelescopeSelectionCaret", { fg = colors.orange })
 hi("TelescopeMatching", { fg = colors.orange, style = "bold" })
 
 -- indent-blankline
-hi("IblIndent", { fg = "#e0e0e0" }) -- インデント線の色
+hi("IblIndent", { fg = "#c0c0c0" }) -- インデント線の色
 hi("IblScope", { fg = colors.orange }) -- 現在のスコープの色
