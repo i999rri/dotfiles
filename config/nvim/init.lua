@@ -31,6 +31,8 @@ vim.cmd([[
   highlight LineNr guibg=none ctermbg=none
 ]])
 
+vim.keymap.set("n", "<Leader><tab>", ":Telescope buffers<CR>", { noremap = true, silent = true })
+
 vim.keymap.set("n", "<Leader>p", ":Telescope file_browser<CR>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<C-p>", ":Telescope find_files<CR>", { noremap = true, silent = true })
