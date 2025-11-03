@@ -98,3 +98,10 @@ vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldenable = false -- 起動時は折りたたまない
 vim.opt.foldlevel = 99
+
+-- statuscolumn
+vim.opt.signcolumn = "yes"
+vim.opt.foldcolumn = '1'
+vim.opt.statuscolumn = " %s%C%l    "
+
+
