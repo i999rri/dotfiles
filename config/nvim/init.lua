@@ -96,12 +96,10 @@ vim.api.nvim_set_keymap("n", "<Leader>k", "<cmd>lua _lazygit_toggle()<CR>", { no
 -- 折りたたみ関連
 vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-vim.opt.foldenable = true 
+vim.opt.foldenable = true
 vim.opt.foldlevel = 99
 
 -- statuscolumn
 vim.opt.signcolumn = "yes"
-vim.opt.foldcolumn = '1'
+vim.opt.foldcolumn = "1"
 vim.opt.statuscolumn = " %s%C%l    "
-
-
