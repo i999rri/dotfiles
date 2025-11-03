@@ -92,3 +92,9 @@ function _lazygit_toggle()
 end
 
 vim.api.nvim_set_keymap("n", "<Leader>k", "<cmd>lua _lazygit_toggle()<CR>", { noremap = true, silent = true })
+
+-- 折りたたみ関連
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.opt.foldenable = false -- 起動時は折りたたまない
+vim.opt.foldlevel = 99
