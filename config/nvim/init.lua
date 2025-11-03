@@ -94,4 +94,4 @@ vim.opt.foldlevel = 99
 -- statuscolumn
 vim.opt.signcolumn = "yes"
 vim.opt.foldcolumn = "1"
-vim.opt.statuscolumn = " %s%C%l    "
+vim.opt.statuscolumn = " %s%C %l     "
