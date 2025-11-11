@@ -194,9 +194,29 @@ return {
             },
         })
 
+        vim.lsp.config("sourcekit", {
+            on_attach = on_attach,
+            capabilities = vim.tbl_deep_extend("force", capabilities,{
+                textDocument = {
+                    diagnostic = {
+                        dynamicRegistration = true,
+                        relatedDocumentSupport = true
+                    }
+                },
+                workspace = {
+                    didChangeWatchedFiles = {
+                        dynamicRegistration = true
+                    }
+                }
+            }),
+            cmd = { "sourcekit-lsp" },
+            filetypes = { "swift", "objc", "objcpp", "c", "cpp" },
+        })
+
         vim.lsp.enable("intelephense")
         vim.lsp.enable("lua_ls")
         vim.lsp.enable("ts_ls")
         vim.lsp.enable("omnisharp")
+        vim.lsp.enable("sourcekit")
     end,
 }
