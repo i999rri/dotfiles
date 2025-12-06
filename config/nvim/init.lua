@@ -10,6 +10,9 @@ vim.opt.number = true
 vim.opt.cursorline = true
 vim.opt.cursorlineopt = "number"
 
+-- troubleのために記述
+vim.diagnostic.config { virtual_text = true }
+
 -- @return void
 local function vim_cmd()
     vim.cmd([[
@@ -46,18 +49,6 @@ vim.keymap.set("i", "<C-k><C-j>", "<Esc>", { noremap = true, silent = true }) --
 vim.keymap.set("n", "q", "<Nop>", { silent = true })
 vim.keymap.set("n", "Q", "<Nop>", { silent = true })
 vim.keymap.set("n", "@", "<Nop>", { silent = true }) -- マクロ実行も無効化
-
--- 診断情報とLSP情報を組み合わせて表示
-local function show_detailed_diagnostic()
-    local diagnostics = vim.diagnostic.get(0, { lnum = vim.fn.line(".") - 1 })
-    if #diagnostics > 0 then
-        vim.diagnostic.open_float()
-    else
-        vim.lsp.buf.hover()
-    end
-end
-
-vim.keymap.set("n", "<C-h>", show_detailed_diagnostic, { desc = "Show diagnostic or hover" })
 
 local Terminal = require("toggleterm.terminal").Terminal
 
