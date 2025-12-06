@@ -44,6 +44,9 @@ selection-foreground = f5f5f5
 font-family = "JetBrainsMono Nerd Font Mono Bold"
 font-size = 15 
 font-style = normal
+font-feature = -dlig
+font-feature = -liga
+font-feature = -calt
 
 # ANSIカラーパレット（白背景Asiimov風）
 palette = 0=2d2d2d
