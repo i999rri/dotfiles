@@ -11,7 +11,22 @@ vim.opt.cursorline = true
 vim.opt.cursorlineopt = "number"
 
 -- troubleのために記述
-vim.diagnostic.config { virtual_text = true }
+vim.diagnostic.config({ virtual_text = true })
+
+-- nvimの外で変更された場合にバッファを自動的に再読み込みするための設定
+vim.opt.autoread = true
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold" }, {
+    pattern = "*",
+    command = "checktime",
+})
+
+-- ウインドウを離れて戻った時にはどのモードであったかを覚えていないため、ウインドウを離れたときは常にモードをリセットする
+vim.api.nvim_create_autocmd("FocusLost", {
+    pattern = "*",
+    callback = function()
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+    end,
+})
 
 -- @return void
 local function vim_cmd()
@@ -23,6 +38,11 @@ local function vim_cmd()
         highlight SignColumn guibg=none ctermbg=none
         highlight EndOfBuffer guibg=none ctermbg=none
         highlight LineNr guibg=none ctermbg=none
+        highlight link CmpItemAbbr Normal
+        highlight link CmpItemAbbrMatch Normal
+        highlight link CmpItemAbbrMatchFuzzy Normal
+        highlight link CmpItemKind Normal
+        highlight link CmpItemMenu Normal
     ]])
 end
 
@@ -86,3 +106,44 @@ vim.opt.foldlevel = 99
 vim.opt.signcolumn = "yes"
 vim.opt.foldcolumn = "1"
 vim.opt.statuscolumn = " %s%C %l     "
+
+local function setup_ime_control()
+    local ime_disable, ime_enable
+
+    if vim.fn.has("mac") == 1 then
+        -- macOS
+        ime_disable = "im-select com.apple.keylayout.ABC"
+        ime_enable = "im-select com.apple.inputmethod.Kotoeri.Japanese"
+    elseif vim.fn.has("unix") == 1 then
+        -- Linux
+        if vim.fn.executable("fcitx-remote") == 1 then
+            ime_disable = "fcitx-remote -c"
+            ime_enable = "fcitx-remote -o"
+        elseif vim.fn.executable("ibus") == 1 then
+            ime_disable = "ibus engine xkb:us::eng"
+            ime_enable = "ibus engine mozc-jp"
+        end
+    elseif vim.fn.has("win32") == 1 then
+        -- Windows
+        ime_disable = nil
+        ime_enable = nil
+    end
+
+    if ime_disable and ime_enable then
+        vim.api.nvim_create_autocmd("FocusGained", {
+            pattern = "*",
+            callback = function()
+                vim.fn.system(ime_disable)
+            end,
+        })
+
+        vim.api.nvim_create_autocmd("FocusLost", {
+            pattern = "*",
+            callback = function()
+                vim.fn.system(ime_enable)
+            end,
+        })
+    end
+end
+
+setup_ime_control()
