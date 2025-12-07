@@ -24,6 +24,10 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold" }, {
 vim.api.nvim_create_autocmd("FocusLost", {
     pattern = "*",
     callback = function()
+        if vim.bo.filetype == "toggleterm" then
+            return
+        end
+
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
     end,
 })
