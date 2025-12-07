@@ -68,6 +68,7 @@ return {
             }),
 
             sources = cmp.config.sources({
+                { name = "skkeleton" },
                 { name = "nvim_lsp" },
                 { name = "luasnip" },
                 { name = "nvim_lua" },
