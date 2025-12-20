@@ -8,7 +8,7 @@ vim.opt.number = true
 
 -- 行の表示
 vim.opt.cursorline = true
-vim.opt.cursorlineopt = "number"
+vim.opt.cursorlineopt = "both"
 
 -- troubleのために記述
 vim.diagnostic.config({ virtual_text = true })
