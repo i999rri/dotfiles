@@ -24,7 +24,7 @@ return {
             scope_chdir = "global",
         })
 
-        -- Telescopeにproject extensionを読み込み
-        require("telescope").load_extension("projects")
+        -- Telescopeにproject extensionを読み込み (Telescope削除のためコメントアウト)
+        -- require("telescope").load_extension("projects")
     end,
 }

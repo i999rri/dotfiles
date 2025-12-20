@@ -54,16 +54,16 @@ vim.api.nvim_create_autocmd("ColorScheme", { callback = vim_cmd })
 
 vim_cmd()
 
-vim.keymap.set("n", "<Leader><tab>", ":Telescope buffers<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<Leader><tab>", "<cmd>lua require('fzf-lua').buffers()<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<Leader>p", ":Telescope file_browser<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<Leader>p", "<cmd>lua require('fzf-lua').files()<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<C-p>", ":Telescope find_files<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<C-p>", "<cmd>lua require('fzf-lua').files()<CR>", { noremap = true, silent = true })
 
 -- 誤動作を回避するために無効化
 vim.keymap.set("n", "p", "<Nop>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<C-l>", ":Telescope live_grep<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<C-l>", "<cmd>lua require('fzf-lua').live_grep()<CR>", { noremap = true, silent = true })
 
 -- Controll + j + k を押すことで Escape を同じ動きをするための設定
 vim.keymap.set("i", "<C-j><C-k>", "<Esc>", { noremap = true, silent = true })
