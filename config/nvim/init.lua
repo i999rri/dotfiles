@@ -111,6 +111,11 @@ vim.opt.signcolumn = "yes"
 vim.opt.foldcolumn = "1"
 vim.opt.statuscolumn = " %s%C %l     "
 
+-- ステータスラインを表示する必要がないため、非表示の設定をしている
+vim.opt.laststatus = 0
+vim.opt.statusline = "─"
+vim.opt.fillchars:append({ stl = "─", stlnc = "─" })
+
 local function setup_ime_control()
     local ime_disable, ime_enable
 
