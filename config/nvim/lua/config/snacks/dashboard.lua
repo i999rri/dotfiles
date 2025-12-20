@@ -7,10 +7,9 @@ local header = {}
 
 -- ダッシュボードのボタン設定
 M.buttons = {
-    { icon = " ", key = "f", desc = "Find File", action = ":Telescope find_files" },
-    { icon = " ", key = "p", desc = "Find Project", action = ":Telescope projects" },
-    { icon = " ", key = "r", desc = "Recent Files", action = ":Telescope oldfiles" },
-    { icon = " ", key = "c", desc = "Config", action = ":Telescope find_files cwd=" .. vim.fn.stdpath("config") },
+    { icon = " ", key = "f", desc = "Find File", action = ":FzfLua files" },
+    { icon = " ", key = "r", desc = "Recent Files", action = ":FzfLua oldfiles" },
+    { icon = " ", key = "c", desc = "Config", action = ":FzfLua files cwd=" .. vim.fn.stdpath("config") },
     { icon = " ", key = "s", desc = "Restore Session", section = "session" },
     { icon = "󰒲 ", key = "L", desc = "Lazy", action = ":Lazy", enabled = package.loaded.lazy ~= nil },
     { icon = " ", key = "q", desc = "Quit", action = ":qa" },
