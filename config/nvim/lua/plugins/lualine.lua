@@ -40,8 +40,24 @@ return {
             inactive_sections = {},
             tabline = {},
             winbar = {
-                lualine_c = { "filename" },
-                lualine_x = { "diagnostics" },
+                lualine_c = {
+                    {
+                        "filename",
+                        path = 1,
+                    },
+                    --         {
+                    -- '       navic', -- ブレッドクラム（nvim-navic が必要）
+                    --         color_correction = nil,
+                    --         navic_opts = nil
+                    --         },
+                },
+                lualine_x = {
+                    {
+                        "diagnostics",
+                        sources = { "nvim_lsp" },
+                        symbols = { error = "  ", warn = "  ", info = "  ", hint = "󰌵 " },
+                    },
+                },
             },
             inactive_winbar = {
                 lualine_c = { "filename" },
