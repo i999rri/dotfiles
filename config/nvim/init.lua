@@ -10,6 +10,9 @@ vim.opt.number = true
 vim.opt.cursorline = true
 vim.opt.cursorlineopt = "both"
 
+-- noice.nvimを使うためデフォルトのcmdlineは非表示にする
+vim.opt.cmdheight = 0
+
 -- troubleのために記述
 vim.diagnostic.config({ virtual_text = true })
 
