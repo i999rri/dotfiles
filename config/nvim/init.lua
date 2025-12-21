@@ -97,11 +97,11 @@ local lazygit = Terminal:new({
     end,
 })
 
-function _lazygit_toggle()
+local function lazygit_toggle()
     lazygit:toggle()
 end
 
-vim.api.nvim_set_keymap("n", "<Leader>k", "<cmd>lua _lazygit_toggle()<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<Leader>k", lazygit_toggle, { noremap = true, silent = true })
 
 -- 折りたたみ関連
 vim.opt.foldmethod = "expr"
