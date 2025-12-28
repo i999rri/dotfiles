@@ -1,7 +1,6 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
 eval "$(sheldon source)"
-alias ghostty="/Applications/Ghostty.app/Contents/MacOS/ghostty"
-alias config="vim ~/.config/ghostty/config"
+source ~/.config/zsh/aliases.zsh 
 
 # tmuxでexitしたときにアタッチしているセッションを消さないための処理
 if [ -n "$TMUX" ]; then
