@@ -1,5 +1,5 @@
 -- ~/.config/nvim/colors/asiimov.lua
--- CS:GO Asiimov風 Neovimカラースキーム
+-- CS:GO Asiimov風 Neovimカラースキーム (Dark)
 
 -- カラースキームをクリア
 vim.cmd("hi clear")
@@ -12,10 +12,11 @@ vim.g.colors_name = "asiimov"
 -- カラーパレット定義
 local colors = {
     -- 基本色
-    white = "#f5f5f5",
-    black = "#0f0f0f",
-    grey = "#2d2d2d",
-    light_grey = "#9e9e9e",
+    white = "#e0e0e0",
+    black = "#1e1e1e",
+    grey = "#9e9e9e",
+    light_grey = "#6e6e6e",
+    dark_grey = "#2a2a2a",
 
     -- Asiimovオレンジ系
     orange = "#ff6b35",
@@ -24,15 +25,15 @@ local colors = {
     yellow_orange = "#ff9800",
 
     -- アクセント色
-    blue = "#2196f3",
-    green = "#4caf50",
+    blue = "#42a5f5",
+    green = "#66bb6a",
     red = "#f44336",
-    purple = "#9c27b0",
-    cyan = "#00bcd4",
+    purple = "#ba68c8",
+    cyan = "#26c6da",
 
     -- UI色
-    bg = "#f5f5f5",
-    fg = "#0f0f0f",
+    bg = "#1e1e1e",
+    fg = "#e0e0e0",
     cursor = "#ff6b35",
     selection = "#ff6b35",
     comment = "#9e9e9e",
@@ -55,13 +56,13 @@ end
 
 -- 基本UI
 hi("Normal", { fg = colors.fg, bg = colors.bg })
-hi("Cursor", { fg = colors.white, bg = colors.cursor })
-hi("CursorLine", { bg = "#eeeeee" })
-hi("CursorColumn", { bg = "#eeeeee" })
+hi("Cursor", { fg = colors.black, bg = colors.cursor })
+hi("CursorLine", { bg = colors.dark_grey })
+hi("CursorColumn", { bg = colors.dark_grey })
 hi("LineNr", { fg = colors.light_grey })
 hi("CursorLineNr", { fg = colors.orange, style = "bold" })
 hi("SignColumn", { bg = colors.bg })
-hi("ColorColumn", { bg = "#eeeeee" })
+hi("ColorColumn", { bg = colors.dark_grey })
 
 -- 選択・検索
 hi("Visual", { fg = colors.white, bg = colors.selection })
@@ -69,19 +70,19 @@ hi("Search", { fg = colors.white, bg = colors.dark_orange })
 hi("IncSearch", { fg = colors.white, bg = colors.orange })
 
 -- ステータスライン
-hi("StatusLine", { fg = colors.white, bg = colors.orange })
-hi("StatusLineNC", { fg = colors.grey, bg = "#e0e0e0" })
-hi("VertSplit", { fg = "#e0e0e0" })
+hi("StatusLine", { fg = colors.black, bg = colors.orange })
+hi("StatusLineNC", { fg = colors.grey, bg = colors.dark_grey })
+hi("VertSplit", { fg = colors.dark_grey })
 
 -- タブライン
-hi("TabLine", { fg = colors.grey, bg = "#e0e0e0" })
-hi("TabLineFill", { bg = "#e0e0e0" })
-hi("TabLineSel", { fg = colors.white, bg = colors.orange })
+hi("TabLine", { fg = colors.grey, bg = colors.dark_grey })
+hi("TabLineFill", { bg = colors.dark_grey })
+hi("TabLineSel", { fg = colors.black, bg = colors.orange })
 
 -- ポップアップメニュー
-hi("Pmenu", { fg = colors.fg, bg = "#eeeeee" })
-hi("PmenuSel", { fg = colors.white, bg = colors.orange })
-hi("PmenuSbar", { bg = "#e0e0e0" })
+hi("Pmenu", { fg = colors.fg, bg = colors.dark_grey })
+hi("PmenuSel", { fg = colors.black, bg = colors.orange })
+hi("PmenuSbar", { bg = "#3a3a3a" })
 hi("PmenuThumb", { bg = colors.orange })
 
 -- エラー・警告
@@ -136,13 +137,13 @@ hi("SpecialComment", { fg = colors.comment, style = "bold" })
 hi("Debug", { fg = colors.red })
 
 -- マッチング括弧
-hi("MatchParen", { fg = colors.orange, bg = "#e8e8e8" })
+hi("MatchParen", { fg = colors.orange, bg = "#3a3a3a", style = "bold" })
 
 -- 差分
-hi("DiffAdd", { fg = colors.green, bg = "#e8f5e8" })
-hi("DiffChange", { fg = colors.yellow_orange, bg = "#fff3e0" })
-hi("DiffDelete", { fg = colors.red, bg = "#ffebee" })
-hi("DiffText", { fg = colors.white, bg = colors.yellow_orange })
+hi("DiffAdd", { fg = colors.green, bg = "#1a3a1a" })
+hi("DiffChange", { fg = colors.yellow_orange, bg = "#3a2a1a" })
+hi("DiffDelete", { fg = colors.red, bg = "#3a1a1a" })
+hi("DiffText", { fg = colors.black, bg = colors.yellow_orange })
 
 -- Git関連 (vim-gitgutter等)
 hi("GitGutterAdd", { fg = colors.green })
@@ -168,7 +169,7 @@ hi("@constant", { fg = colors.orange })
 hi("@operator", { fg = colors.grey })
 
 -- NvimTree
-hi("NvimTreeNormal", { fg = colors.fg, bg = "#eeeeee" })
+hi("NvimTreeNormal", { fg = colors.fg, bg = colors.dark_grey })
 hi("NvimTreeFolderName", { fg = colors.blue })
 hi("NvimTreeFolderIcon", { fg = colors.orange })
 hi("NvimTreeOpenedFolderName", { fg = colors.blue, style = "bold" })
@@ -177,10 +178,10 @@ hi("NvimTreeSpecialFile", { fg = colors.orange })
 hi("NvimTreeExecFile", { fg = colors.green })
 
 -- Telescope
-hi("TelescopeSelection", { fg = colors.white, bg = colors.orange })
+hi("TelescopeSelection", { fg = colors.black, bg = colors.orange })
 hi("TelescopeSelectionCaret", { fg = colors.orange })
 hi("TelescopeMatching", { fg = colors.orange, style = "bold" })
 
 -- indent-blankline
-hi("IblIndent", { fg = "#c0c0c0" }) -- インデント線の色
+hi("IblIndent", { fg = "#3a3a3a" }) -- インデント線の色
 hi("IblScope", { fg = colors.orange }) -- 現在のスコープの色

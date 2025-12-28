@@ -17,7 +17,7 @@ macos-non-native-fullscreen = true
 auto-update = download
 macos-icon = chalkboard
 background-image = "~/.config/ghostty/images/background-image.png"
-background-image-opacity = 0.1
+background-image-opacity = 0.3
 background-image-fit = cover
 # font
 font-feature = -dlig
@@ -25,18 +25,18 @@ font-feature = -dlig
 # 行間隔
 adjust-cell-height = 5
 
-# Ghostty Asiimov Theme
-# CS:GO Asiimovスキンにインスパイアされたテーマ
+# Ghostty Asiimov Theme (Dark)
+# CS:GO Asiimovスキンにインスパイアされたダークテーマ
 
 # 基本色設定
-background = f5f5f5
-foreground = 0f0f0f
+background = 1e1e1e
+foreground = e0e0e0
 cursor-color = ff6b35
-cursor-text = f5f5f5
+cursor-text = 1e1e1e
 
 # 選択範囲
 selection-background = ff6b35
-selection-foreground = f5f5f5
+selection-foreground = 1e1e1e
 
 # ウィンドウ設定
 # window-opacity = 0.98
