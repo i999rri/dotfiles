@@ -2,6 +2,8 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 eval "$(sheldon source)"
 source ~/.config/zsh/aliases.zsh 
 
+set -o ignoreeof
+
 # tmuxでexitしたときにアタッチしているセッションを消さないための処理
 if [ -n "$TMUX" ]; then
     exit() {
@@ -20,3 +22,4 @@ fi
 
 
 . "$HOME/.local/bin/env"
+. ~/.config/zsh/.zshenv
