@@ -40,8 +40,9 @@ selection-foreground = 1e1e1e
 
 # ウィンドウ設定
 # window-opacity = 0.98
-# window-padding-x = 15
-# window-padding-y = 15
+# tmux ステータスバーの下に余分な空間ができないよう、パディングを0に設定
+window-padding-x = 0
+window-padding-y = 0
 
 # フォント（お好みで変更してください）
 font-family = "JetBrainsMono Nerd Font Mono Bold"
