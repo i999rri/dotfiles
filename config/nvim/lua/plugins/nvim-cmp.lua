@@ -26,6 +26,9 @@ return {
         -- friendly-snippetsを読み込み
         require("luasnip.loaders.from_vscode").lazy_load()
 
+        -- カスタムスニペットを読み込み
+        require("luasnip.loaders.from_lua").load({ paths = "~/.config/nvim/lua/snippets" })
+
         cmp.setup({
             snippet = {
                 expand = function(args)
