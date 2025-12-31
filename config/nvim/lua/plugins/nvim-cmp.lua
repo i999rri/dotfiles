@@ -36,6 +36,14 @@ return {
                 end,
             },
 
+            -- パフォーマンス設定
+            performance = {
+                debounce = 60,          -- デフォルト: 60ms（入力停止後の待機時間）
+                throttle = 30,          -- デフォルト: 30ms
+                fetching_timeout = 500, -- デフォルト: 500ms（LSPの応答待ち時間）
+                max_view_entries = 50,  -- 表示する最大候補数
+            },
+
             window = {
                 completion = { scrollbar = true, width = 80, height = 25 },
                 documentation = { width = 100, height = 30 },
@@ -76,7 +84,21 @@ return {
                 { name = "luasnip" },
                 { name = "nvim_lua" },
             }, {
-                { name = "buffer" },
+                {
+                    name = "buffer",
+                    max_item_count = 10,
+                    keyword_length = 3, -- 3文字以上で補完開始
+                    option = {
+                        get_bufnrs = function()
+                            -- 表示中のバッファのみを対象
+                            local bufs = {}
+                            for _, win in ipairs(vim.api.nvim_list_wins()) do
+                                bufs[vim.api.nvim_win_get_buf(win)] = true
+                            end
+                            return vim.tbl_keys(bufs)
+                        end,
+                    },
+                },
                 { name = "path" },
             }),
 
