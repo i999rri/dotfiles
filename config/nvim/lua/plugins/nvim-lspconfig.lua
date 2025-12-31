@@ -211,6 +211,17 @@ return {
             }),
             cmd = { "sourcekit-lsp" },
             filetypes = { "swift", "objc", "objcpp", "c", "cpp" },
+            -- パフォーマンス最適化
+            flags = {
+                debounce_text_changes = 150, -- テキスト変更の送信を遅延
+            },
+            init_options = {
+                -- インデックス処理を軽量化
+                indexing = {
+                    enabled = true,
+                    indexSystemModules = false, -- システムモジュールのインデックスを無効化
+                },
+            },
         })
 
         vim.lsp.enable("intelephense")
