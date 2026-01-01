@@ -45,8 +45,17 @@ return {
             },
 
             window = {
-                completion = { scrollbar = true, width = 80, height = 25 },
-                documentation = { width = 100, height = 30 },
+                completion = {
+                    border = "none",
+                    scrollbar = true,
+                    winhighlight = "Normal:Pmenu,FloatBorder:Pmenu,CursorLine:PmenuSel,Search:None",
+                },
+                documentation = {
+                    border = "none",
+                    winhighlight = "Normal:Pmenu,FloatBorder:Pmenu",
+                    max_width = 80,
+                    max_height = 25,
+                },
             },
 
             mapping = cmp.mapping.preset.insert({

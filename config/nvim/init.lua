@@ -50,6 +50,20 @@ local function vim_cmd()
         highlight link CmpItemAbbrMatchFuzzy Normal
         highlight link CmpItemKind Normal
         highlight link CmpItemMenu Normal
+
+        " Markdown highlighting for documentation window (Visual Studio IntelliSense style)
+        highlight @markup.heading guifg=#ff6b35 gui=bold
+        highlight @markup.strong guifg=#e0e0e0 gui=bold
+        highlight @markup.italic guifg=#9e9e9e gui=italic
+        highlight @markup.raw.block guibg=#3a3a3a guifg=#66bb6a
+        highlight @markup.raw guibg=#3a3a3a guifg=#ff9800
+        highlight @markup.link guifg=#42a5f5 gui=underline
+        highlight @markup.link.url guifg=#42a5f5 gui=underline
+        highlight @markup.list guifg=#ff6b35
+        highlight @text.literal guifg=#66bb6a
+        highlight @text.uri guifg=#42a5f5 gui=underline
+        highlight @text.emphasis guifg=#9e9e9e gui=italic
+        highlight @text.strong guifg=#e0e0e0 gui=bold
     ]])
 end
 
