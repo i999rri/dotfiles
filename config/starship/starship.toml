@@ -6,7 +6,6 @@ add_newline = false
 format = """\
 $directory\
 $git_branch\
-$git_status\
 $fill\
 $cmd_duration\
 $time\
@@ -33,22 +32,10 @@ truncation_symbol = "…/"
 [git_branch]
 symbol = " "
 style = "bg:#3f3f4f fg:#e0e0e0"
-format = "[](fg:#3f3f4f)[ $symbol$branch ]($style)"
+format = "[](fg:#3f3f4f)[ $symbol$branch ]($style)[](fg:#3f3f4f)"
 
 [git_status]
-style = "bg:#3f3f4f fg:#ff6b35 bold"
-format = "[$all_status$ahead_behind ]($style)[](fg:#3f3f4f)"
-modified = "!"
-staged = "+"
-untracked = ""
-deleted = "✘"
-renamed = "»"
-stashed = "≡"
-conflicted = "="
-ahead = "⇡${count}"
-behind = "⇣${count}"
-diverged = "⇕⇡${ahead_count}⇣${behind_count}"
-up_to_date = ""
+disabled = true
 
 [cmd_duration]
 min_time = 2_000
