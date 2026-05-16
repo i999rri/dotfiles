@@ -11,7 +11,7 @@ $fill\
 $cmd_duration\
 $time\
 $line_break\
-${env_var.prompt_admin}${env_var.prompt_user}"""
+$os$shell${env_var.prompt_admin}${env_var.prompt_user}"""
 
 # Hide username and hostname (even on SSH).
 [username]
@@ -61,10 +61,28 @@ time_format = "%H:%M:%S"
 style = "bg:#ff6b35 fg:#1e1e1e bold"
 format = "[](fg:#ff6b35)[ $time ]($style)"
 
+# OS icon — auto-detected on each platform.
+[os]
+disabled = false
+style = "fg:#888888"
+format = "[$symbol ]($style)"
+
+# Shell indicator — pwsh / zsh / bash etc.
+[shell]
+disabled = false
+style = "fg:#888888"
+format = "[$indicator ]($style)"
+powershell_indicator = "pwsh"
+zsh_indicator = "zsh"
+bash_indicator = "bash"
+fish_indicator = "fish"
+cmd_indicator = "cmd"
+unknown_indicator = "shell"
+
 # Prompt symbol — switched based on STARSHIP_PROMPT_ADMIN / STARSHIP_PROMPT_USER.
-# The shell profile (e.g. pwsh \D:\k9z5x\documents\PowerShell\Microsoft.PowerShell_profile.ps1, zshrc) sets exactly one of these:
-#   admin -> STARSHIP_PROMPT_ADMIN = "#/"
-#   user  -> STARSHIP_PROMPT_USER  = "~/"
+# The shell profile (e.g. pwsh $PROFILE, zshrc) sets exactly one of these:
+#   admin -> STARSHIP_PROMPT_ADMIN = "#❯"
+#   user  -> STARSHIP_PROMPT_USER  = "~❯"
 # Whichever is set renders here with its module's colour.
 [env_var.prompt_admin]
 variable = "STARSHIP_PROMPT_ADMIN"
