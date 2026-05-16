@@ -108,7 +108,6 @@ style = "bold fg:#ff6b35"
 [env_var.dir_close]
 variable = "STARSHIP_NO_GIT"
 format = "[](fg:#ff6b35)"
-default = ""
 
 # Built-in character disabled — prompt is driven entirely by env_var above.
 [character]
