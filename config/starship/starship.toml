@@ -1,0 +1,118 @@
+# Starship config — tmux2k Asiimov-inspired (slanted, orange accent).
+# Reference: https://starship.rs/config/
+
+add_newline = false
+
+format = """\
+$directory\
+$git_branch\
+$git_status\
+$fill\
+$cmd_duration\
+$time\
+$line_break\
+$os$shell${env_var.prompt_admin}${env_var.prompt_user}"""
+
+# Hide username and hostname (even on SSH).
+[username]
+disabled = true
+
+[hostname]
+disabled = true
+
+[fill]
+symbol = ' '
+
+[directory]
+style = "bg:#ff6b35 fg:#1e1e1e bold"
+format = "[ $path ]($style)[](fg:#ff6b35)"
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = " "
+style = "bg:#3f3f4f fg:#e0e0e0"
+format = "[](fg:#3f3f4f)[ $symbol$branch ]($style)"
+
+[git_status]
+style = "bg:#3f3f4f fg:#ff6b35 bold"
+format = "[$all_status$ahead_behind ]($style)[](fg:#3f3f4f)"
+modified = "!"
+staged = "+"
+untracked = "?"
+deleted = "✘"
+renamed = "»"
+stashed = "$"
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+up_to_date = ""
+
+[cmd_duration]
+min_time = 2_000
+style = "fg:#ffaa55"
+format = "[took $duration ]($style)"
+
+[time]
+disabled = false
+time_format = "%H:%M:%S"
+style = "bg:#ff6b35 fg:#1e1e1e bold"
+format = "[](fg:#ff6b35)[ $time ]($style)"
+
+# OS label — auto-detected on each platform, rendered as plain text.
+[os]
+disabled = false
+style = "fg:#888888"
+format = "[$symbol ]($style)"
+
+[os.symbols]
+Windows = "windows"
+Macos = "macos"
+Linux = "linux"
+Arch = "arch"
+Ubuntu = "ubuntu"
+Debian = "debian"
+Fedora = "fedora"
+NixOS = "nixos"
+Alpine = "alpine"
+Manjaro = "manjaro"
+Pop = "pop"
+Raspbian = "raspbian"
+Redhat = "rhel"
+RedHatEnterprise = "rhel"
+openSUSE = "opensuse"
+SUSE = "suse"
+Unknown = "linux"
+
+# Shell indicator — pwsh / zsh / bash etc.
+[shell]
+disabled = false
+style = "fg:#888888"
+format = "[$indicator ]($style)"
+powershell_indicator = "pwsh"
+zsh_indicator = "zsh"
+bash_indicator = "bash"
+fish_indicator = "fish"
+cmd_indicator = "cmd"
+unknown_indicator = "shell"
+
+# Prompt symbol — switched based on STARSHIP_PROMPT_ADMIN / STARSHIP_PROMPT_USER.
+# The shell profile (e.g. pwsh $PROFILE, zshrc) sets exactly one of these:
+#   admin -> STARSHIP_PROMPT_ADMIN = "#❯"
+#   user  -> STARSHIP_PROMPT_USER  = "~❯"
+# Whichever is set renders here with its module's colour.
+[env_var.prompt_admin]
+variable = "STARSHIP_PROMPT_ADMIN"
+format = "[$env_value]($style) "
+style = "bold fg:red"
+
+[env_var.prompt_user]
+variable = "STARSHIP_PROMPT_USER"
+format = "[$env_value]($style) "
+style = "bold fg:#ff6b35"
+
+# Built-in character disabled — prompt is driven entirely by env_var above.
+[character]
+disabled = true
