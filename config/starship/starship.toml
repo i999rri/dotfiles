@@ -31,7 +31,7 @@ truncate_to_repo = true
 truncation_symbol = "…/"
 
 [git_branch]
-symbol = " "
+symbol = " "
 style = "bg:#3f3f4f fg:#e0e0e0"
 format = "[](fg:#3f3f4f)[ $symbol$branch ]($style)"
 
