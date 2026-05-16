@@ -5,6 +5,7 @@ add_newline = false
 
 format = """\
 $directory\
+${env_var.dir_close}\
 $git_branch\
 $fill\
 $cmd_duration\
@@ -99,6 +100,15 @@ style = "bold fg:red"
 variable = "STARSHIP_PROMPT_USER"
 format = "[$env_value]($style) "
 style = "bold fg:#ff6b35"
+
+# Closing slant for the directory block. Rendered only when STARSHIP_NO_GIT
+# is set (= the current directory is NOT inside a git repository). Inside
+# a repo, git_branch's leading transition cell handles the orange→gray slant
+# instead, so this stays empty to avoid a duplicated edge.
+[env_var.dir_close]
+variable = "STARSHIP_NO_GIT"
+format = "[](fg:#ff6b35)"
+default = ""
 
 # Built-in character disabled — prompt is driven entirely by env_var above.
 [character]
