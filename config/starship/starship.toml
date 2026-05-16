@@ -61,11 +61,30 @@ time_format = "%H:%M:%S"
 style = "bg:#ff6b35 fg:#1e1e1e bold"
 format = "[](fg:#ff6b35)[ $time ]($style)"
 
-# OS icon — auto-detected on each platform.
+# OS label — auto-detected on each platform, rendered as plain text.
 [os]
 disabled = false
 style = "fg:#888888"
 format = "[$symbol ]($style)"
+
+[os.symbols]
+Windows = "windows"
+Macos = "macos"
+Linux = "linux"
+Arch = "arch"
+Ubuntu = "ubuntu"
+Debian = "debian"
+Fedora = "fedora"
+NixOS = "nixos"
+Alpine = "alpine"
+Manjaro = "manjaro"
+Pop = "pop"
+Raspbian = "raspbian"
+Redhat = "rhel"
+RedHatEnterprise = "rhel"
+openSUSE = "opensuse"
+SUSE = "suse"
+Unknown = "linux"
 
 # Shell indicator — pwsh / zsh / bash etc.
 [shell]
