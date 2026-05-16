@@ -24,7 +24,7 @@ symbol = ' '
 
 [directory]
 style = "bg:#ff6b35 fg:#1e1e1e bold"
-format = "[ $path ]($style)[](fg:#ff6b35)"
+format = "[ $path ]($style)"
 truncation_length = 3
 truncate_to_repo = true
 truncation_symbol = "…/"
@@ -32,7 +32,7 @@ truncation_symbol = "…/"
 [git_branch]
 symbol = " "
 style = "bg:#3f3f4f fg:#e0e0e0"
-format = "[](fg:#3f3f4f)[ $symbol$branch ]($style)[](fg:#3f3f4f)"
+format = "[](fg:#ff6b35 bg:#3f3f4f)[ $symbol$branch ]($style)[](fg:#3f3f4f)"
 
 [git_status]
 disabled = true
