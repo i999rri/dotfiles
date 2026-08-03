@@ -80,20 +80,20 @@ git clone git@github.com:i999rri/dotfiles.git $HOME\source\repos\dotfiles
 New-Item -ItemType Directory -Force -Path "$HOME\.config" | Out-Null
 New-Item -ItemType SymbolicLink -Force `
   -Path "$HOME\.config\starship.toml" `
-  -Target "$HOME\source\repos\dotfiles\config\starship\starship.toml"
+  -Target "$HOME\source\repos\dotfiles\.config\starship\starship.toml"
 
 # pwsh profile
 $profileDir = Split-Path -Parent $PROFILE
 New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
 New-Item -ItemType SymbolicLink -Force `
   -Path $PROFILE `
-  -Target "$HOME\source\repos\dotfiles\config\pwsh\Microsoft.PowerShell_profile.ps1"
+  -Target "$HOME\source\repos\dotfiles\.config\pwsh\Microsoft.PowerShell_profile.ps1"
 
 # Ghostty config
 New-Item -ItemType Directory -Force -Path "$env:LOCALAPPDATA\ghostty" | Out-Null
 New-Item -ItemType SymbolicLink -Force `
   -Path "$env:LOCALAPPDATA\ghostty\config" `
-  -Target "$HOME\source\repos\dotfiles\config\ghostty\config"
+  -Target "$HOME\source\repos\dotfiles\.config\ghostty\config"
 ```
 
 シンボリックリンク作成には**管理者権限**が必要。管理者 pwsh から実行する。あるいは Windows 設定 → 「開発者向け」→ 「開発者モード」を有効化すると一般ユーザーでも `mklink` 系が通る。
@@ -106,7 +106,7 @@ New-Item -ItemType SymbolicLink -Force `
 pwsh.exe -NoLogo
 ```
 
-これで起動時のバージョンバナーが出なくなる。Ghostty 側は `command=pwsh -NoLogo` が `config/ghostty/config` に書かれているのでステップ 7 で自動適用される。
+これで起動時のバージョンバナーが出なくなる。Ghostty 側は `command=pwsh -NoLogo` が `.config/ghostty/config` に書かれているのでステップ 7 で自動適用される。
 
 ### 9. 確認
 
@@ -163,21 +163,8 @@ $env:STARSHIP_PROMPT_ADMIN  # 管理者シェルなら '#❯' が返る
 
 `-Scope 'User'` (3 番目の引数) を渡しているか確認。`'Process'` だと現プロセスのみ。`'Machine'` だと全ユーザー (要管理者)。
 
-## macOS / Linux への移植
+## macOS / Linux
 
-このリポジトリの `config/starship/starship.toml` 自体はクロスプラットフォーム。各 OS で必要な作業:
+NixOS と macOS は Nix で宣言的に構成してあるため、この runbook ではなく [setup-nix.md](setup-nix.md) を参照する。
 
-1. starship インストール (`brew install starship` / `apt install starship`)
-2. Nerd Font インストール
-3. シェルの rc (`~/.zshrc` / `~/.bashrc`) に init 行と admin 判定を追加:
-   ```sh
-   eval "$(starship init zsh)"
-   if [[ $EUID -eq 0 ]]; then
-       export STARSHIP_PROMPT_ADMIN='#❯'
-   else
-       export STARSHIP_PROMPT_USER='~❯'
-   fi
-   ```
-4. `~/.config/starship.toml` を本リポジトリの `config/starship/starship.toml` にシンボリックリンク
-
-zsh / bash 側は本 runbook では扱わない (必要になったタイミングで別 runbook を追加する)。
+starship の init と管理者判定は `.config/zsh/.zshrc` に入っているので、シェル側で個別にやることはない。`starship.toml` は 3 つの OS で同じファイルを共有している。

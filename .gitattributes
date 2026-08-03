@@ -1,0 +1,8 @@
+# This repository is edited from Windows but checked out on Linux and macOS,
+# where CRLF breaks shell startup files outright. Normalise on commit and check
+# out LF everywhere.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
