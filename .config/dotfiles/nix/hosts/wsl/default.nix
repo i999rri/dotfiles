@@ -18,6 +18,13 @@
 
   users.users.${username} = {
     isNormalUser = true;
+
+    # Pinned rather than auto-allocated. Ownership on disk is recorded by uid,
+    # so an account that gets a different number on another machine - or a
+    # replaced account that inherits a recycled one - ends up owning the wrong
+    # files. 1000 is what NixOS-WSL's stock user already holds.
+    uid = 1000;
+
     extraGroups = [ "wheel" ];
   };
 

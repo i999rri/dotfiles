@@ -30,6 +30,10 @@
     let
       defaultUser = "i999rri";
 
+      # home-manager がこのリポジトリを $HOME に展開するときの取得元。
+      # 手元に取得済みならネットワークには触らない (nix/home/default.nix)
+      repoUrl = "https://github.com/i999rri/dotfiles.git";
+
       # home-manager is wired the same way on either OS; only the module it
       # hangs off differs.
       homeModule = user: hmModule: {
@@ -39,7 +43,7 @@
           useUserPackages = true;
           backupFileExtension = "hm-bak";
           extraSpecialArgs = {
-            inherit inputs;
+            inherit inputs repoUrl;
             username = user;
           };
           users.${user} = import ./nix/home;
