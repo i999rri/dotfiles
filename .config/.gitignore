@@ -10,6 +10,8 @@ karabiner
 crossnote
 swiftpm
 
-# nix / home-manager が生成する。dotfiles 側で管理するものではない
-nix
-home-manager
+# nix / home-manager が生成する。dotfiles 側で管理するものではない。
+# 先頭のスラッシュは必須。これがないと下の階層の同名ディレクトリ
+# (.config/dotfiles/nix/) まで巻き込む
+/nix
+/home-manager
