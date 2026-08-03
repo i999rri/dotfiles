@@ -40,6 +40,32 @@ OS 別の設定が分かれているのは、`i18n` や `nix-ld` のように片
 curl -fsSL https://raw.githubusercontent.com/i999rri/dotfiles/main/.config/dotfiles/bootstrap.sh | bash
 ```
 
+**NixOS-WSL の初回だけは root で実行する。**
+
+```powershell
+wsl -d NixOS -u root
+```
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/i999rri/dotfiles/main/.config/dotfiles/bootstrap.sh | bash
+```
+
+stock の tarball が用意する暫定ユーザー (`nixos`) で作業すると、このリポジトリが作る
+ユーザーに切り替わる際に**自分自身を削除する**ことになり、そのセッションの
+`getpwnam` が失敗する。root なら削除されないので起きない。
+
+root で実行したときは **この 1 回で完結する**:
+
+1. clone せずリモートの flake からシステムを構成する (`$HOME` を汚さない)
+2. そこで作られた目的のユーザーの `$HOME` に dotfiles を展開し、所有者を渡す
+
+あとは WSL を落として入り直すだけ:
+
+```powershell
+wsl --shutdown
+wsl -d NixOS
+```
+
 判定できないマシンではホスト名を渡す:
 
 ```sh
@@ -58,31 +84,22 @@ bash ~/.config/dotfiles/bootstrap.sh wsl
 
 ## 手動でやる場合
 
-`bootstrap.sh` が中でやっていることを分解すると以下になる。
+`bootstrap.sh` が中でやっていることを分解すると以下になる。順序が「システムを先、dotfiles を後」なのは、目的のユーザーがシステムの反映によって初めて作られるため。
 
-### 1. dotfiles を bare repository として展開する
-
-素の NixOS には git が入っていないため、`nix-shell` で一時的に借りる (macOS では不要)。
-
-```sh
-nix-shell -p git --run '
-  git clone --bare https://github.com/i999rri/dotfiles.git "$HOME/.dotfiles" &&
-  git --git-dir="$HOME/.dotfiles" --work-tree="$HOME" config status.showUntrackedFiles no &&
-  git --git-dir="$HOME/.dotfiles" --work-tree="$HOME" checkout
-'
-```
-
-2 行目の `status.showUntrackedFiles no` は必須。work-tree が `$HOME` なので、これがないと `git status` が `$HOME` 配下の全ファイルを untracked として列挙する。
-
-`checkout` が既存ファイルと衝突した場合は、そのファイルを退避してからやり直す。
-
-### 2. システムを反映する
+### 1. システムを反映する
 
 初回だけ flakes が無効なので、この実行の間だけ有効化する。
 
 `nixos-rebuild` / `darwin-rebuild` は `--extra-experimental-features` を受け付けない (引数エラーになる) ため、`NIX_CONFIG` で渡す。`sudo` は環境変数を落とすので明示的に引き継ぐ。
 
-NixOS:
+NixOS-WSL の初回 (root で実行する。まだ dotfiles が手元にないので、リモートの flake を直接指す):
+
+```sh
+NIX_CONFIG="experimental-features = nix-command flakes" \
+  nixos-rebuild switch --flake 'github:i999rri/dotfiles?dir=.config/dotfiles#wsl'
+```
+
+すでに dotfiles が展開済みなら、手元の flake を指す:
 
 ```sh
 sudo NIX_CONFIG="experimental-features = nix-command flakes" \
@@ -103,9 +120,42 @@ sudo nixos-rebuild switch --flake "$HOME/.config/dotfiles#wsl"   # NixOS
 sudo darwin-rebuild switch --flake "$HOME/.config/dotfiles#mac"  # macOS
 ```
 
-### 3. ユーザーを切り替える (NixOS-WSL の初回のみ)
+### 2. dotfiles を bare repository として展開する
 
-NixOS-WSL の初期ユーザーは `nixos` だが、このリポジトリは `i999rri` を作る。ステップ 2 の時点でユーザーは作られているので、WSL を再起動して切り替える。
+素の NixOS には git が入っていないため、`nix-shell` で一時的に借りる (macOS では不要)。
+
+本人で実行する場合:
+
+```sh
+nix-shell -p git --run '
+  git clone --bare https://github.com/i999rri/dotfiles.git "$HOME/.dotfiles" &&
+  git --git-dir="$HOME/.dotfiles" --work-tree="$HOME" config status.showUntrackedFiles no &&
+  git --git-dir="$HOME/.dotfiles" --work-tree="$HOME" checkout
+'
+```
+
+ステップ 1 を root でやった場合は、そのまま root から代理で展開して所有者を移す。これで WSL を落とす前に必要な作業がすべて終わる:
+
+```sh
+u="$(awk -F= '/^[[:space:]]*default[[:space:]]*=/ {gsub(/[[:space:]]/,"",$2); print $2}' /etc/wsl.conf)"
+h="$(getent passwd "$u" | cut -d: -f6)"
+
+nix-shell -p git --run "
+  git clone --bare https://github.com/i999rri/dotfiles.git '$h/.dotfiles' &&
+  git --git-dir='$h/.dotfiles' --work-tree='$h' config status.showUntrackedFiles no &&
+  git --git-dir='$h/.dotfiles' --work-tree='$h' checkout
+"
+
+chown -R "$u:$(id -gn "$u")" "$h"
+```
+
+`status.showUntrackedFiles no` は必須。work-tree が `$HOME` なので、これがないと `git status` が配下の全ファイルを untracked として列挙する。
+
+`checkout` が既存ファイルと衝突した場合は、そのファイルを退避してからやり直す。
+
+### 3. WSL を落として入り直す (NixOS-WSL の初回のみ)
+
+NixOS-WSL の初期ユーザーは `nixos` だが、このリポジトリは `i999rri` を作る。ステップ 1 の時点でユーザーは作られているので、WSL を再起動して切り替える。
 
 Windows 側 (pwsh) から:
 
@@ -115,8 +165,6 @@ wsl -d NixOS
 ```
 
 `whoami` が `i999rri` になっていれば成功。
-
-新しいユーザーの `$HOME` は空なので、**ステップ 1 をもう一度実行する**。以降このホストで bootstrap が必要になることはない。
 
 ## 確認
 
@@ -217,6 +265,14 @@ sudo darwin-rebuild switch --rollback   # macOS
 `nix/shared/` と `nix/modules/` は共通なので触らなくてよい。
 
 ## トラブルシューティング
+
+### 初回ログインで `zsh-newuser-install` が起動する
+
+zsh は `$ZDOTDIR` (未設定なら `$HOME`) に `.zshenv` / `.zprofile` / `.zshrc` / `.zlogin` の**どれ 1 つも無い**とき、初回設定ウィザードを出す。dotfiles をまだ展開していない状態がこれに当たる。
+
+`q` を押して抜け、ステップ 2 の展開を実行する。`~/.zshenv` が置かれれば出なくなる。
+
+**ウィザードで設定ファイルを作らないこと。** 作ると展開時に `checkout` が衝突する。
 
 ### `git status` が `$HOME` 中のファイルを大量に表示する
 
