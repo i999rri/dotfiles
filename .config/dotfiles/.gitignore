@@ -1,0 +1,3 @@
+# nix build / nixos-rebuild build が作る symlink
+result
+result-*

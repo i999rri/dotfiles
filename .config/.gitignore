@@ -9,3 +9,7 @@ linearmouse
 karabiner
 crossnote
 swiftpm
+
+# nix / home-manager が生成する。dotfiles 側で管理するものではない
+nix
+home-manager
