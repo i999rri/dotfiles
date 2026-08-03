@@ -10,6 +10,8 @@ NixOS (WSL・ベアメタル) と macOS (nix-darwin) でこのリポジトリの
 
 `~/.config/nvim` などが実ファイルとしてその場所に存在するため、シンボリックリンクは 1 本も張らない。編集はそのまま git の変更として見える。
 
+展開そのものも home-manager の activation が行うので、`switch` 以外にやることはない。
+
 リポジトリ自身の管理ファイル (`flake.nix` / `nix/` / `docs/`) は `$HOME` を散らかさないよう `.config/dotfiles/` 配下にまとめてある。
 
 ```
@@ -54,10 +56,7 @@ stock の tarball が用意する暫定ユーザー (`nixos`) で作業すると
 ユーザーに切り替わる際に**自分自身を削除する**ことになり、そのセッションの
 `getpwnam` が失敗する。root なら削除されないので起きない。
 
-root で実行したときは **この 1 回で完結する**:
-
-1. clone せずリモートの flake からシステムを構成する (`$HOME` を汚さない)
-2. そこで作られた目的のユーザーの `$HOME` に dotfiles を展開し、所有者を渡す
+root で実行したときは **この 1 回で完結する**。システムの反映で目的のユーザーが作られ、そのユーザーの home-manager が dotfiles を `$HOME` に展開するところまで一度に走る (`nix/home/default.nix`)。root 自身の `$HOME` は汚さない。
 
 あとは WSL を落として入り直すだけ:
 
@@ -120,11 +119,16 @@ sudo nixos-rebuild switch --flake "$HOME/.config/dotfiles#wsl"   # NixOS
 sudo darwin-rebuild switch --flake "$HOME/.config/dotfiles#mac"  # macOS
 ```
 
-### 2. dotfiles を bare repository として展開する
+### 2. dotfiles の展開 (通常は自動)
 
-素の NixOS には git が入っていないため、`nix-shell` で一時的に借りる (macOS では不要)。
+ステップ 1 の反映で home-manager の activation が走り、bare repository の取得と `$HOME` への展開まで済んでいる (`nix/home/default.nix`)。**通常この手順は要らない。**
 
-本人で実行する場合:
+取得と展開は別々の条件になっているため、
+
+- 一度取得したあとはネットワークに触らない (オフラインでも反映が通る)
+- 取得に失敗しても反映自体は成功し、次回の反映で再試行される
+
+手で展開する場合はこうなる。素の NixOS には git が入っていないため `nix-shell` で一時的に借りる (macOS では不要):
 
 ```sh
 nix-shell -p git --run '
@@ -132,21 +136,6 @@ nix-shell -p git --run '
   git --git-dir="$HOME/.dotfiles" --work-tree="$HOME" config status.showUntrackedFiles no &&
   git --git-dir="$HOME/.dotfiles" --work-tree="$HOME" checkout
 '
-```
-
-ステップ 1 を root でやった場合は、そのまま root から代理で展開して所有者を移す。これで WSL を落とす前に必要な作業がすべて終わる:
-
-```sh
-u="$(awk -F= '/^[[:space:]]*default[[:space:]]*=/ {gsub(/[[:space:]]/,"",$2); print $2}' /etc/wsl.conf)"
-h="$(getent passwd "$u" | cut -d: -f6)"
-
-nix-shell -p git --run "
-  git clone --bare https://github.com/i999rri/dotfiles.git '$h/.dotfiles' &&
-  git --git-dir='$h/.dotfiles' --work-tree='$h' config status.showUntrackedFiles no &&
-  git --git-dir='$h/.dotfiles' --work-tree='$h' checkout
-"
-
-chown -R "$u:$(id -gn "$u")" "$h"
 ```
 
 `status.showUntrackedFiles no` は必須。work-tree が `$HOME` なので、これがないと `git status` が配下の全ファイルを untracked として列挙する。
