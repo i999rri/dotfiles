@@ -7,7 +7,10 @@
 # 反映さえすれば、そのユーザーの home-manager が bare repository を取得して
 # $HOME に展開する。シンボリックリンクは 1 本も張らない。
 #
-#   curl -fsSL https://raw.githubusercontent.com/i999rri/dotfiles/main/.config/dotfiles/bootstrap.sh | bash
+# flake の app として公開してあるので、clone せずに実行できる:
+#
+#   nix --extra-experimental-features 'nix-command flakes' \
+#     run 'github:i999rri/dotfiles?dir=.config/dotfiles'
 #
 # NixOS-WSL の初回だけは root で実行する。stock の tarball が用意する暫定ユーザー
 # (nixos) で作業すると、このリポジトリが作るユーザーへの切り替えでそのユーザー自身を

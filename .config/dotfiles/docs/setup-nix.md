@@ -36,11 +36,14 @@ OS 別の設定が分かれているのは、`i18n` や `nix-ld` のように片
 
 ## クイックスタート
 
-`bootstrap.sh` が OS を判定して、clone から反映までを通しでやる。
+`bootstrap.sh` を flake の app として公開しているので、clone せずに実行できる。OS を判定して反映までを通しでやる。
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/i999rri/dotfiles/main/.config/dotfiles/bootstrap.sh | bash
+nix --extra-experimental-features 'nix-command flakes' \
+  run 'github:i999rri/dotfiles?dir=.config/dotfiles'
 ```
+
+`nix` コマンド自体はこのフラグを受け付けるため、flakes が未設定の初回でも通る (`nixos-rebuild` は受け付けない)。
 
 **NixOS-WSL の初回だけは root で実行する。**
 
@@ -49,7 +52,8 @@ wsl -d NixOS -u root
 ```
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/i999rri/dotfiles/main/.config/dotfiles/bootstrap.sh | bash
+nix --extra-experimental-features 'nix-command flakes' \
+  run 'github:i999rri/dotfiles?dir=.config/dotfiles'
 ```
 
 stock の tarball が用意する暫定ユーザー (`nixos`) で作業すると、このリポジトリが作る
@@ -68,7 +72,13 @@ wsl -d NixOS
 判定できないマシンではホスト名を渡す:
 
 ```sh
-bash ~/.config/dotfiles/bootstrap.sh wsl
+nix run 'github:i999rri/dotfiles?dir=.config/dotfiles' -- wsl
+```
+
+展開済みの環境なら手元の flake を指してもよい:
+
+```sh
+nix run ~/.config/dotfiles -- wsl
 ```
 
 ホストの一覧は `flake.nix` の `nixosConfigurations` / `darwinConfigurations` を参照。

@@ -28,6 +28,13 @@
       ...
     }@inputs:
     let
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+      forAllSystems = nixpkgs.lib.genAttrs systems;
+
       defaultUser = "i999rri";
 
       # home-manager がこのリポジトリを $HOME に展開するときの取得元。
@@ -93,10 +100,32 @@
         mac = mkDarwin { hostname = "mac"; };
       };
 
-      formatter = nixpkgs.lib.genAttrs [
-        "x86_64-linux"
-        "aarch64-linux"
-        "aarch64-darwin"
-      ] (system: nixpkgs.legacyPackages.${system}.nixfmt);
+      # `nix run <this flake>` で初回セットアップを実行できるようにする。
+      # writeShellApplication を通しているので、ビルド時に shellcheck がかかり、
+      # 必要なコマンドは PATH に載った状態で起動する
+      apps = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          bootstrap = pkgs.writeShellApplication {
+            name = "bootstrap";
+            runtimeInputs = with pkgs; [
+              coreutils
+              gnugrep
+            ];
+            text = builtins.readFile ./bootstrap.sh;
+          };
+          app = {
+            type = "app";
+            program = "${bootstrap}/bin/bootstrap";
+          };
+        in
+        {
+          default = app;
+          bootstrap = app;
+        }
+      );
+
+      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt);
     };
 }
