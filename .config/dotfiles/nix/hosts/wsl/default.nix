@@ -5,7 +5,12 @@
   ...
 }:
 {
-  imports = [ inputs.nixos-wsl.nixosModules.default ];
+  imports = [
+    inputs.nixos-wsl.nixosModules.default
+
+    # ローカルの Kubernetes。常駐するのでホスト単位で入れる
+    ../../modules/k3s.nix
+  ];
 
   wsl = {
     enable = true;
