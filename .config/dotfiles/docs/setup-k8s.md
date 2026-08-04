@@ -49,15 +49,17 @@ cilium status
 
 ## イメージを作る
 
-k3s の containerd をそのまま使うので、**レジストリへの push も import も要らない**。
-
-`CONTAINERD_ADDRESS` と `CONTAINERD_NAMESPACE` を設定済みなので、`nerdctl` は k3s と同じ containerd を見る。
+k3s の containerd をそのまま使うので、**レジストリへの push も import も要らない**。ビルドは Dockerfile をそのまま書けばよい。
 
 ```sh
 nerdctl build -t myapp:dev .
 
 kubectl run myapp --image=myapp:dev --image-pull-policy=Never
 ```
+
+`nerdctl` は `sudo -E nerdctl` の alias にしてある。k3s の containerd ソケットが root 所有で、一般ユーザーのまま起動すると nerdctl が rootless モードに入って別のソケットを探しにいくため。`-E` は `CONTAINERD_ADDRESS` と `CONTAINERD_NAMESPACE` を sudo 越しに引き継ぐためのもの。
+
+スクリプトから呼ぶときは shell alias が効かないので、`sudo -E nerdctl` と直接書く。
 
 `imagePullPolicy: Never` が要るのは、タグ付きイメージを見つけると kubelet が既定でレジストリを引きに行くため。
 
@@ -108,7 +110,40 @@ sudo systemctl start k3s
 
 ## トラブルシューティング
 
-### Pod が Pending のまま進まない
+### Pod が Pending のまま進まない (untolerated taint)
+
+```
+0/1 nodes are available: 1 node(s) had untolerated taint(s)
+```
+
+CNI がないと kubelet が Ready にならず、ノードに not-ready の taint が付く。この状態で **Cilium を入れる Job 自身がその taint で弾かれる**と、CNI が永久に入らないデッドロックになる。
+
+`nix/modules/k3s.nix` で Cilium の chart に `spec.bootstrap = true` を立ててあるのはこのため。k3s はこのフラグの付いた chart をクラスタ起動に必要なものとして扱い、taint を無視して先に流す。
+
+反映されているか確認する:
+
+```sh
+kubectl -n kube-system get helmchart cilium -o jsonpath='{.spec.bootstrap}'   # true
+```
+
+`extraFieldDefinitions` はリソースのトップレベルにマージされるので、`spec` まで含めて書かないと効かない。
+
+### Pod が ContainerCreating のまま進まない (cilium-cni が見つからない)
+
+```
+plugin type="cilium-cni" failed (add):
+  failed to find plugin "cilium-cni" in path [/opt/cni/bin]
+```
+
+Cilium が CNI プラグインを置く場所と、kubelet が探す場所がずれている。
+
+kubelet が見るのは `/opt/cni/bin` なので、**Cilium の `cni.binPath` は指定してはいけない** (既定のままにする)。k3s のデータディレクトリ (`/var/lib/rancher/k3s/data/current/bin`) を指すと、置いた場所と探す場所が食い違ってこの状態になる。
+
+```sh
+sudo ls -la /opt/cni/bin/          # cilium-cni があるか
+```
+
+### Pod が Pending のまま進まない (CNI 未導入)
 
 CNI が入っていない。Cilium の Pod を確認する。
 

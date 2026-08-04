@@ -48,14 +48,27 @@
         hash = "sha256-xfATkSNg0aM09E7yXzbaWbo0FM20j0Zu4S0MT9/yeIM=";
         targetNamespace = "kube-system";
 
+        # CNI がないと kubelet が Ready にならず、ノードに not-ready の taint が
+        # 付く。それを tolerate しないと「CNI を入れる Job 自身が CNI がなくて
+        # 動けない」というデッドロックになる。bootstrap を立てると、k3s は
+        # この chart をクラスタ起動に必要なものとして扱い、taint を無視して
+        # 先に流してくれる
+        #
+        # extraFieldDefinitions はリソースのトップレベルにマージされるので、
+        # spec まで含めて指定しないとモジュールが生成する spec.bootstrap を
+        # 上書きできない
+        extraFieldDefinitions.spec.bootstrap = true;
+
         values = {
           # kube-proxy がいないので、API server の位置を直接教える必要がある
           kubeProxyReplacement = true;
           k8sServiceHost = "127.0.0.1";
           k8sServicePort = 6443;
 
-          # k3s は CNI プラグインを独自のパスに置く
-          cni.binPath = "/var/lib/rancher/k3s/data/current/bin";
+          # cni.binPath は指定しない。k3s の kubelet はプラグインを
+          # /opt/cni/bin から探すため、Cilium 側の既定のままにしておく必要が
+          # ある。k3s のデータディレクトリを指すと、置いた場所と探す場所が
+          # ずれて sandbox の作成が延々と失敗する
 
           # 単一ノードなので operator を冗長化しても待つだけになる
           operator.replicas = 1;
@@ -107,7 +120,34 @@
     # k3s の containerd を直接叩いてイメージを作るため。同じ containerd を
     # 使うので、ビルドしたイメージを push も import もせずに Pod から使える
     nerdctl
+    buildkit
   ];
+
+  # nerdctl build は自分ではビルドせず buildkitd に投げる。NixOS には
+  # services.buildkit がないので自分で定義する。
+  #
+  # ワーカーを k3s の containerd にしているのがこの構成の要で、ビルドした
+  # イメージが最初から k8s.io namespace に入るため、レジストリを経由せずに
+  # そのまま Pod から参照できる。
+  systemd.services.buildkitd = {
+    description = "BuildKit daemon (k3s の containerd をワーカーにする)";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "k3s.service" ];
+    requires = [ "k3s.service" ];
+
+    serviceConfig = {
+      Type = "notify";
+      ExecStart = ''
+        ${pkgs.buildkit}/bin/buildkitd \
+          --oci-worker=false \
+          --containerd-worker=true \
+          --containerd-worker-addr=/run/k3s/containerd/containerd.sock \
+          --containerd-worker-namespace=k8s.io
+      '';
+      Restart = "always";
+      RestartSec = "5s";
+    };
+  };
 
   # nerdctl から k3s の containerd を見に行かせる。namespace を k8s.io に
   # 合わせると、ビルドしたイメージが kubelet からそのまま見える
@@ -115,4 +155,9 @@
     CONTAINERD_ADDRESS = "/run/k3s/containerd/containerd.sock";
     CONTAINERD_NAMESPACE = "k8s.io";
   };
+
+  # k3s の containerd ソケットは root 所有で、nerdctl は一般ユーザーで起動すると
+  # rootless モードに入って別のソケットを探しにいく。-E は上の環境変数を
+  # sudo 越しに引き継ぐため
+  environment.shellAliases.nerdctl = "sudo -E nerdctl";
 }
