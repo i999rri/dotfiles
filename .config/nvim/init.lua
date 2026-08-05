@@ -4,6 +4,26 @@ vim.cmd("colorscheme asiimov")
 
 vim.opt.clipboard = "unnamedplus"
 
+-- WSL では Windows 側のクリップボードを直接読み書きする。
+-- WSLg を無効にしている (msrdc が Windows 側のフォーカスを奪うため) ので
+-- Wayland のクリップボードが存在せず、nvim の自動検出も効かない。
+-- wsl-copy / wsl-paste は NixOS 側で用意している。
+if vim.fn.has("wsl") == 1 and vim.fn.executable("wsl-copy") == 1 then
+    vim.g.clipboard = {
+        name = "wsl-clipboard",
+        copy = {
+            ["+"] = "wsl-copy",
+            ["*"] = "wsl-copy",
+        },
+        paste = {
+            ["+"] = "wsl-paste",
+            ["*"] = "wsl-paste",
+        },
+        -- Windows 側でコピーした内容を拾うため、nvim 内のキャッシュは使わない
+        cache_enabled = false,
+    }
+end
+
 vim.opt.number = true
 
 -- 行の表示
