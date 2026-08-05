@@ -108,7 +108,24 @@ pwsh.exe -NoLogo
 
 これで起動時のバージョンバナーが出なくなる。Ghostty 側は `command=pwsh -NoLogo` が `.config/ghostty/config` に書かれているのでステップ 7 で自動適用される。
 
-### 9. 確認
+### 9. WSL を使う場合は `.wslconfig` を置く
+
+NixOS-WSL で開発する場合のみ。`%USERPROFILE%\.wslconfig` に配置する。
+
+```powershell
+Copy-Item "$HOME\source\repos\dotfiles\.config\dotfiles\windows\.wslconfig" `
+  -Destination "$HOME\.wslconfig"
+
+wsl --shutdown
+```
+
+このリポジトリは Linux の `$HOME` に展開されるため、Windows 側のこのファイルだけは自動では配置されない。
+
+中身は WSLg (`msrdc`) の無効化。**WSL 内で GUI アプリを起動していなくても `msrdc` が立ち上がり、そのウィンドウが Windows 側のフォーカスを奪って入力が中断される**ため。GUI を使わない用途では常駐させる理由がない。
+
+これを切るとクリップボードの連携先が変わる (Wayland ではなく Windows 側の `clip.exe` / `Get-Clipboard`) が、そちらは NixOS 側で設定済み。詳細は [setup-nix.md](setup-nix.md) を参照。
+
+### 10. 確認
 
 新しい pwsh タブを開いて以下が表示されれば成功:
 

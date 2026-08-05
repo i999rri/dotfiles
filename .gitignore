@@ -1,0 +1,39 @@
+# このリポジトリは bare repository として $HOME に直接展開する。work-tree が
+# $HOME そのものなので、ホームディレクトリにある機微なファイルがうっかり
+# コミットされうる。status.showUntrackedFiles no で一覧に出ないぶん、
+# 気付かないまま `add` してしまう危険の方が大きいため、明示的に除外する。
+#
+# 追跡したいものが増えたときは `dot add -f <path>` で個別に上書きする。
+
+# 鍵と認証情報
+.ssh/
+.gnupg/
+.aws/
+.azure/
+.docker/
+.kube/
+.netrc
+.npmrc
+.pypirc
+*.pem
+*.key
+
+# シェルの履歴
+.bash_history
+.zsh_history
+.python_history
+.node_repl_history
+.lesshst
+
+# ランタイムが $HOME に作るもの
+.cache/
+.local/
+.nix-profile
+.nix-defexpr
+.nix-channels
+.dotfiles-backup/
+
+# 各種ツールの状態
+.claude/
+.vscode-server/
+.cursor-server/
