@@ -1,0 +1,17 @@
+# WSL2 の設定。Windows 側の %USERPROFILE%\.wslconfig に置く。
+# 反映には `wsl --shutdown` が必要。
+#
+# このリポジトリは Linux の $HOME に展開されるため、このファイルだけは
+# 自動では配置されない。docs/setup-windows.md の手順でコピーする。
+
+[wsl2]
+# WSLg (msrdc) を無効にする。
+#
+# WSL 内で GUI アプリを起動していなくても msrdc が立ち上がり、そのウィンドウが
+# Windows 側のフォーカスを奪って入力が中断される。GUI を使わない用途では
+# 常駐させる理由がない。
+#
+# これを切ると Wayland / X11 のソケットも無くなるため、クリップボード連携は
+# wl-clipboard ではなく Windows 側の clip.exe / Get-Clipboard を使う
+# (nix/hosts/wsl/default.nix の wsl-copy / wsl-paste)。
+guiApplications=false
