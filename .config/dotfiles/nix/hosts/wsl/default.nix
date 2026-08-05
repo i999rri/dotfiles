@@ -4,6 +4,19 @@
   username,
   ...
 }:
+let
+  # gh auth login のように「ブラウザを開く」CLI のための $BROWSER。
+  #
+  # explorer.exe に URL を渡すと Windows 側の既定のブラウザで開くが、成功して
+  # も終了コード 1 を返すため、それを見ている呼び出し元が失敗と誤判定する。
+  # ここで握りつぶしておく。
+  #
+  # この用途では wslu の wslview が定番だったが、プロジェクトが終了して
+  # nixpkgs からも削除された (2026-04)。
+  wslBrowser = pkgs.writeShellScriptBin "wsl-browser" ''
+    /mnt/c/Windows/explorer.exe "$@" || true
+  '';
+in
 {
   imports = [
     inputs.nixos-wsl.nixosModules.default
@@ -49,7 +62,12 @@
 
   # nvim sets clipboard=unnamedplus, which needs something to shell out to.
   # WSLg exposes a Wayland clipboard, so the normal Linux tool works.
-  environment.systemPackages = [ pkgs.wl-clipboard ];
+  environment.systemPackages = [
+    pkgs.wl-clipboard
+    wslBrowser
+  ];
+
+  environment.variables.BROWSER = "wsl-browser";
 
   system.stateVersion = "26.05";
 }
