@@ -7,14 +7,31 @@
 let
   # gh auth login のように「ブラウザを開く」CLI のための $BROWSER。
   #
-  # explorer.exe に URL を渡すと Windows 側の既定のブラウザで開くが、成功して
-  # も終了コード 1 を返すため、それを見ている呼び出し元が失敗と誤判定する。
-  # ここで握りつぶしておく。
+  # explorer.exe は使わない。URL を渡せば既定のブラウザで開くものの、引数が
+  # 空だったり URL でなかったりすると代わりにファイルエクスプローラが開いて
+  # しまうため、$BROWSER としては挙動が広すぎる。
+  #
+  # rundll32 の FileProtocolHandler は URL プロトコルのハンドラだけを呼ぶので、
+  # 開くのは既定のブラウザに限られる。引数が不正なら何も起きない。
   #
   # この用途では wslu の wslview が定番だったが、プロジェクトが終了して
   # nixpkgs からも削除された (2026-04)。
   wslBrowser = pkgs.writeShellScriptBin "wsl-browser" ''
-    /mnt/c/Windows/explorer.exe "$@" || true
+    set -eu
+
+    url="''${1:-}"
+
+    # 受け取るのは http(s) の URL だけに絞る。ブラウザを開くつもりで別のものが
+    # 起動する経路を残さない
+    case "$url" in
+      http://* | https://*) ;;
+      *)
+        echo "wsl-browser: http(s) の URL のみ受け付ける: ''${url:-(引数なし)}" >&2
+        exit 2
+        ;;
+    esac
+
+    exec /mnt/c/Windows/System32/rundll32.exe url.dll,FileProtocolHandler "$url"
   '';
 in
 {
