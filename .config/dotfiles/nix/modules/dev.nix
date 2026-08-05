@@ -10,6 +10,9 @@
     pkg-config
     nodejs_22
     python3
+
+    # skkeleton runs on denops.vim, which will not start without Deno
+    deno
   ];
 
   programs.direnv = {
