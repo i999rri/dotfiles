@@ -33,6 +33,11 @@ vim.opt.number = true
 -- 引き換えに $ が行末の 1 つ先を指すようになる点だけ挙動が変わる。
 vim.opt.virtualedit = "onemore"
 
+-- 既定では normal がブロック、insert が細い縦棒になる。桁が同じでも、ブロックは
+-- 文字を覆い、縦棒は文字の左端に立つため、モードを切り替えるとカーソルが半文字
+-- ぶん動いたように見える。全モードをブロックに揃えて見た目の位置を固定する。
+vim.opt.guicursor = "a:block"
+
 -- 行の表示
 vim.opt.cursorline = true
 vim.opt.cursorlineopt = "both"
@@ -105,6 +110,22 @@ vim.keymap.set("n", "<C-l>", "<cmd>lua require('fzf-lua').live_grep()<CR>", { no
 -- Controll + j + k を押すことで Escape を同じ動きをするための設定
 vim.keymap.set("i", "<C-j><C-k>", "<Esc>", { noremap = true, silent = true })
 vim.keymap.set("i", "<C-k><C-j>", "<Esc>", { noremap = true, silent = true }) -- 順序が逆でも対応
+
+-- insert を抜けるとカーソルが 1 文字左へ動くため、insert と normal を往復する
+-- たびに桁が左へ流れていく。抜けた直後に 1 つ右へ戻して桁を保つ。
+--
+-- Esc のキーマップ側ではなく InsertLeave で行うのは、Esc に割り当てているキーが
+-- 複数あり (上の <C-j><C-k> など)、プラグインが独自に抜ける場合も拾うため。
+-- 行末より先には戻さない (virtualedit=onemore なので行末の 1 つ先までは許容)。
+vim.api.nvim_create_autocmd("InsertLeave", {
+    pattern = "*",
+    callback = function()
+        local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+        if col < #vim.api.nvim_get_current_line() then
+            vim.api.nvim_win_set_cursor(0, { row, col + 1 })
+        end
+    end,
+})
 
 -- 全てのマクロ記録関連キーを無効化
 vim.keymap.set("n", "q", "<Nop>", { silent = true })
