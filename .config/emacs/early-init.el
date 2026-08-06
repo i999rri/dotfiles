@@ -27,6 +27,40 @@
 (push '(tool-bar-lines . 0) default-frame-alist)
 (push '(vertical-scroll-bars) default-frame-alist)
 
+;; Ghostty の window-padding-x / window-padding-y = 0 に合わせて余白を作らない。
+;; 背景色も先に入れておく。init.el でテーマを読むまでの間、既定の白い矩形が
+;; 一瞬見えるのを防ぐ (Ghostty の background = 1e1e1e と同じ値)。
+(push '(internal-border-width . 0) default-frame-alist)
+(push '(background-color . "#1e1e1e") default-frame-alist)
+(push '(foreground-color . "#e0e0e0") default-frame-alist)
+
+;; フォント。値は .config/ghostty/config に合わせている
+;; (font-family = JetBrainsMono Nerd Font Mono Bold / font-size = 15)。
+;;
+;; ここで指定するのは、フレームが作られた後に変えると桁数・行数が変わって
+;; しまうため。ウィンドウのピクセル寸法は保たれる一方、1 文字の大きさが増える
+;; ぶん収まる文字数が減り、下で指定する 160x48 が無視されたように見える。
+;;
+;; Windows に入っているファミリ名は "JetBrainsMono NFM" で、Ghostty が使う
+;; "JetBrainsMono Nerd Font Mono" とは表記が異なる。
+(push '(font . "JetBrainsMono NFM-15:weight=bold") default-frame-alist)
+
+;; ウィンドウの初期サイズ。単位は行と桁で、実寸は上のフォントで決まる。
+;; Ghostty 側には指定がないため、80 桁を 2 つ並べられる幅を基準にしている。
+;;
+;; 画面に対して大きすぎる場合は起動後に高さだけ詰める (init.el の後半)。
+(push '(width . 160) default-frame-alist)
+(push '(height . 48) default-frame-alist)
+
+;; 背景を少し透かす。
+;;
+;; Emacs にはウィンドウ全面に画像を敷く機能がないため、Ghostty の
+;; background-image / background-image-opacity はそのままは再現できない。
+;; 近いものとして背景自体を半透明にし、後ろの壁紙を透かす。
+;;
+;; alpha ではなく alpha-background を使うのは、前者だと文字まで透けるため。
+(push '(alpha-background . 85) default-frame-alist)
+
 (setq menu-bar-mode nil
       tool-bar-mode nil
       scroll-bar-mode nil)

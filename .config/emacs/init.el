@@ -178,21 +178,56 @@
 ;; Windows 版の Emacs は -nw だと Windows のコンソール API を直接叩くため、
 ;; ConPTY ベースの端末では initialize_w32_display に失敗する
 ;; ("GetConsoleScreenBufferInfo failed")。このため Windows では GUI で使う。
+;; 本体のフォント指定は early-init.el にある (フレーム生成後に変えると
+;; 初期サイズの指定が効かなくなるため)。ここでは日本語だけ同じ系列に揃える。
+;; 指定しないと別のフォントが選ばれて行の高さがずれる。
 (defconst i999rri/font-family "JetBrainsMono NFM"
-  "使うフォント。Nerd Font Mono 版を指す。")
+  "使うフォント。Ghostty の font-family に対応する Windows 側の名前。")
 
-(defun i999rri/setup-font (&optional frame)
-  "FRAME にフォントを設定する。GUI のときだけ意味がある。"
+(defun i999rri/setup-japanese-font (&optional frame)
+  "FRAME の日本語フォントを本体と揃える。"
   (when (and (display-graphic-p frame)
              (member i999rri/font-family (font-family-list frame)))
-    (set-face-attribute 'default frame :family i999rri/font-family :height 110)
-    ;; 日本語も同じ系列で揃える。指定しないと別のフォントが選ばれて
-    ;; 行の高さがずれる
     (set-fontset-font t 'japanese-jisx0208
                       (font-spec :family i999rri/font-family) frame)))
 
-(add-hook 'window-setup-hook #'i999rri/setup-font)
-(add-hook 'after-make-frame-functions #'i999rri/setup-font)
+(add-hook 'window-setup-hook #'i999rri/setup-japanese-font)
+(add-hook 'after-make-frame-functions #'i999rri/setup-japanese-font)
+
+;; Ghostty の adjust-cell-height = 5 に相当する行間。
+(setq-default line-spacing 5)
+
+;; Ghostty は font-feature で dlig / liga / calt を切っている。Emacs 側も
+;; 合字の合成を無効にして見え方を揃える。
+;;
+;; auto-composition-mode はバッファローカルなので、関数を呼んでも今のバッファ
+;; にしか効かない。既定値の方を落とす。
+(setq-default auto-composition-mode nil)
+
+;; ウィンドウが画面に収まるよう高さだけ詰める。
+;;
+;; フォントを大きくしているため、early-init.el で指定した行数がそのままでは
+;; 入らない環境がある。幅には触らない。
+;;
+;; 判定には display-pixel-height ではなく、今フレームが乗っているモニタの
+;; workarea を使う。マルチモニタでは display-pixel-* が全体の矩形を返すため、
+;; 実際に使える領域とずれる (ここでは 2 枚で 3840x1080、workarea は 1920x1044)。
+(defun i999rri/fit-frame-height (&optional frame)
+  "FRAME の高さを、乗っているモニタの作業領域に収まる範囲まで縮める。"
+  (let ((frame (or frame (selected-frame))))
+    (when (display-graphic-p frame)
+      (let* ((workarea (alist-get 'workarea (frame-monitor-attributes frame)))
+             ;; workarea は (x y width height)
+             (usable (if workarea (nth 3 workarea) (display-pixel-height)))
+             ;; タイトルバーと余白の分を引く
+             (max-lines (/ (- usable 60) (frame-char-height frame))))
+        (when (> (frame-height frame) max-lines)
+          (set-frame-height frame max-lines))))))
+
+;; window-setup-hook では frame の実寸がまだ確定しておらず、ここで縮めると
+;; 幅まで巻き添えになる。描画が落ち着いてから一度だけ行う。
+(add-hook 'emacs-startup-hook
+          (lambda () (run-with-idle-timer 0.1 nil #'i999rri/fit-frame-height)))
 
 ;;; ---------------------------------------------------------------------------
 ;;; 見た目

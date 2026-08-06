@@ -52,7 +52,9 @@
    `(fill-column-indicator ((t (:foreground ,dark-grey))))
 
    ;; 選択・検索
-   `(region           ((t (:foreground ,white :background ,orange))))
+   ;; region は Ghostty の selection-foreground / selection-background に合わせる
+   ;; (nvim の Visual は fg が白だが、端末側は背景色と同じ濃い色を使っている)
+   `(region           ((t (:foreground ,black :background ,orange))))
    `(highlight        ((t (:foreground ,black :background ,orange))))
    `(isearch          ((t (:foreground ,white :background ,orange))))
    `(lazy-highlight   ((t (:foreground ,white :background ,dark-orange))))
@@ -123,24 +125,26 @@
    `(show-paren-match ((t (:foreground ,orange :background ,grey-3 :weight bold))))
    `(show-paren-mismatch ((t (:foreground ,white :background ,red :weight bold))))
 
-   ;; 端末やコンパイル結果の出力に使われる 16 色。既定のままだと red3 や blue2
-   ;; といったパレット外の色が混ざる。
-   `(ansi-color-black          ((t (:foreground ,black      :background ,black))))
-   `(ansi-color-red            ((t (:foreground ,red        :background ,red))))
-   `(ansi-color-green          ((t (:foreground ,green      :background ,green))))
-   `(ansi-color-yellow         ((t (:foreground ,yellow-orange :background ,yellow-orange))))
-   `(ansi-color-blue           ((t (:foreground ,blue       :background ,blue))))
-   `(ansi-color-magenta        ((t (:foreground ,purple     :background ,purple))))
-   `(ansi-color-cyan           ((t (:foreground ,cyan       :background ,cyan))))
-   `(ansi-color-white          ((t (:foreground ,white      :background ,white))))
-   `(ansi-color-bright-black   ((t (:foreground ,light-grey :background ,light-grey))))
-   `(ansi-color-bright-red     ((t (:foreground ,red        :background ,red))))
-   `(ansi-color-bright-green   ((t (:foreground ,green      :background ,green))))
-   `(ansi-color-bright-yellow  ((t (:foreground ,orange     :background ,orange))))
-   `(ansi-color-bright-blue    ((t (:foreground ,blue       :background ,blue))))
-   `(ansi-color-bright-magenta ((t (:foreground ,purple     :background ,purple))))
-   `(ansi-color-bright-cyan    ((t (:foreground ,cyan       :background ,cyan))))
-   `(ansi-color-bright-white   ((t (:foreground ,white      :background ,white))))
+   ;; 端末やコンパイル結果の出力に使われる 16 色。
+   ;; 値は .config/ghostty/config の palette をそのまま使う。asiimov.lua の
+   ;; 構文用パレットとは別物で、Ghostty 側にしかない色がある (ff9800 の黄、
+   ;; e91e63 のマゼンタなど)。端末と Emacs で同じ出力が同じ色になるよう揃える。
+   `(ansi-color-black          ((t (:foreground "#2d2d2d" :background "#2d2d2d"))))
+   `(ansi-color-red            ((t (:foreground "#ff6b35" :background "#ff6b35"))))
+   `(ansi-color-green          ((t (:foreground "#4caf50" :background "#4caf50"))))
+   `(ansi-color-yellow         ((t (:foreground "#ff9800" :background "#ff9800"))))
+   `(ansi-color-blue           ((t (:foreground "#2196f3" :background "#2196f3"))))
+   `(ansi-color-magenta        ((t (:foreground "#e91e63" :background "#e91e63"))))
+   `(ansi-color-cyan           ((t (:foreground "#00bcd4" :background "#00bcd4"))))
+   `(ansi-color-white          ((t (:foreground "#0f0f0f" :background "#0f0f0f"))))
+   `(ansi-color-bright-black   ((t (:foreground "#424242" :background "#424242"))))
+   `(ansi-color-bright-red     ((t (:foreground "#ff8c61" :background "#ff8c61"))))
+   `(ansi-color-bright-green   ((t (:foreground "#66bb6a" :background "#66bb6a"))))
+   `(ansi-color-bright-yellow  ((t (:foreground "#ffc947" :background "#ffc947"))))
+   `(ansi-color-bright-blue    ((t (:foreground "#42a5f5" :background "#42a5f5"))))
+   `(ansi-color-bright-magenta ((t (:foreground "#ff7043" :background "#ff7043"))))
+   `(ansi-color-bright-cyan    ((t (:foreground "#26c6da" :background "#26c6da"))))
+   `(ansi-color-bright-white   ((t (:foreground "#1a1a1a" :background "#1a1a1a"))))
 
    ;; diff (nvim の DiffAdd 等)
    `(diff-added       ((t (:foreground ,green         :background "#1a3a1a"))))
