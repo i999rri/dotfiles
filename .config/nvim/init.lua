@@ -107,18 +107,25 @@ vim.keymap.set("n", "p", "<Nop>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<C-l>", "<cmd>lua require('fzf-lua').live_grep()<CR>", { noremap = true, silent = true })
 
--- insert を抜けるとカーソルが 1 文字左へ動くため、insert と normal を往復する
--- たびに左へ進んでいく。抜けるときに 1 つ右へ戻して桁を保つ。
--- 行頭には戻す先がないので、そのときはそのまま抜ける。
-local function leave_insert_keeping_column()
-    return vim.fn.col(".") > 1 and "<Esc>l" or "<Esc>"
-end
-
-vim.keymap.set("i", "<Esc>", leave_insert_keeping_column, { expr = true, silent = true })
-
 -- Controll + j + k を押すことで Escape を同じ動きをするための設定
-vim.keymap.set("i", "<C-j><C-k>", leave_insert_keeping_column, { expr = true, silent = true })
-vim.keymap.set("i", "<C-k><C-j>", leave_insert_keeping_column, { expr = true, silent = true }) -- 順序が逆でも対応
+vim.keymap.set("i", "<C-j><C-k>", "<Esc>", { noremap = true, silent = true })
+vim.keymap.set("i", "<C-k><C-j>", "<Esc>", { noremap = true, silent = true }) -- 順序が逆でも対応
+
+-- insert を抜けるとカーソルが 1 文字左へ動くため、insert と normal を往復する
+-- たびに桁が左へ流れていく。抜けた直後に 1 つ右へ戻して桁を保つ。
+--
+-- Esc のキーマップ側ではなく InsertLeave で行うのは、Esc に割り当てているキーが
+-- 複数あり (上の <C-j><C-k> など)、プラグインが独自に抜ける場合も拾うため。
+-- 行末より先には戻さない (virtualedit=onemore なので行末の 1 つ先までは許容)。
+vim.api.nvim_create_autocmd("InsertLeave", {
+    pattern = "*",
+    callback = function()
+        local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+        if col < #vim.api.nvim_get_current_line() then
+            vim.api.nvim_win_set_cursor(0, { row, col + 1 })
+        end
+    end,
+})
 
 -- 全てのマクロ記録関連キーを無効化
 vim.keymap.set("n", "q", "<Nop>", { silent = true })
