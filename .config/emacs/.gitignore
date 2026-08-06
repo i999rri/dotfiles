@@ -1,0 +1,24 @@
+# Emacs は設定と実行時のデータを同じディレクトリに置く。追跡するのは
+# init.el と early-init.el だけで、あとは起動すれば再生成されるもの。
+#
+# nvim 側はプラグインが ~/.local/share/nvim に入るためこの問題が起きない。
+
+# elpaca が取得・ビルドしたパッケージ (nvim の lazy/ に相当)
+elpaca/
+
+# init.el で var/ にまとめている backup / auto-save / custom.el
+var/
+
+# native compilation の成果物
+eln-cache/
+
+# 実行時に作られるもの
+auto-save-list/
+transient/
+tramp
+places
+recentf
+history
+projects
+.cache/
+url/
