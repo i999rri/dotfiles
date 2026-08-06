@@ -46,11 +46,12 @@
 (push '(font . "JetBrainsMono NFM-15:weight=bold") default-frame-alist)
 
 ;; ウィンドウの初期サイズ。単位は行と桁で、実寸は上のフォントで決まる。
-;; Ghostty 側には指定がないため、80 桁を 2 つ並べられる幅を基準にしている。
+;; 80 桁のコードを開いて、横に補完やヘルプを出せる程度の幅にしてある。
+;; フォントを 15pt にしているため、桁数の割に実寸は大きくなる。
 ;;
 ;; 画面に対して大きすぎる場合は起動後に高さだけ詰める (init.el の後半)。
-(push '(width . 160) default-frame-alist)
-(push '(height . 48) default-frame-alist)
+(push '(width . 118) default-frame-alist)
+(push '(height . 34) default-frame-alist)
 
 ;; 背景を少し透かす。
 ;;
