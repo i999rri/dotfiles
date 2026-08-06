@@ -15,6 +15,10 @@ eln-cache/
 # 実行時に作られるもの
 auto-save-list/
 transient/
+org-persist/
+elpa/
+.emacs.desktop
+.emacs.desktop.lock
 tramp
 places
 recentf

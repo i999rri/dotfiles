@@ -2,25 +2,44 @@
 
 ;;; Commentary:
 
-;; nvim (lazy.nvim) 側と同じ構成を狙っている。対応は以下のとおり。
+;; nvim (lazy.nvim) 側と同じ構成を狙っている。向こうの lua/plugins/ にある
+;; ものを一つずつ対応させた。
 ;;
 ;;   lazy.nvim              -> elpaca
-;;   fzf-lua / snacks       -> vertico + consult + orderless + marginalia
-;;   nvim-cmp / lspkind     -> corfu + cape
-;;   nvim-lspconfig / mason -> eglot (組み込み)
-;;   nvim-treesitter        -> treesit (組み込み)
-;;   toggleterm + lazygit   -> magit
-;;   trouble                -> flymake + consult-flymake
-;;   conform                -> apheleia
-;;   oil.nvim               -> dired (組み込み)
-;;   project.nvim           -> project.el (組み込み)
-;;   indent-blankline       -> indent-bars
+;;   fzf-lua                -> vertico + consult + orderless + marginalia
+;;   nvim-cmp               -> corfu + cape
+;;   lspkind                -> kind-icons (corfu の :annotation)
 ;;   luasnip                -> tempel
+;;   nvim-lspconfig, mason  -> eglot (同梱)
+;;   nvim-treesitter        -> treesit (同梱)
+;;   nvim-ts-autotag        -> sgml-electric-tag-pair-mode (同梱)
+;;   ultimate-autopair      -> electric-pair-mode (同梱)
+;;   conform                -> apheleia
+;;   trouble                -> flymake + consult-flymake (同梱)
+;;   toggleterm             -> eat
+;;   (toggleterm 経由の lazygit) -> magit
+;;   oil.nvim               -> dired (同梱)
+;;   project.nvim           -> project.el (同梱)
+;;   indent-blankline       -> indent-bars
+;;   modes.nvim             -> (evil のカーソル色で代替)
+;;   lualine                -> doom-modeline
+;;   noice.nvim             -> vertico (ミニバッファ自体が置き換わる)
+;;   vimade                 -> auto-dim-other-buffers
+;;   neogen                 -> separedit + docstring は各 major-mode に任せる
+;;   render-markdown        -> markdown-mode
+;;   calendar.vim           -> calfw
 ;;   skkeleton              -> ddskk
 ;;   kulala                 -> verb
-;;   ultimate-autopair      -> electric-pair-mode (組み込み)
+;;   snacks.nvim (dashboard) -> dashboard
+;;     nvim 側は snacks 本体を有効にしたうえで dashboard だけ使い、bigfile /
+;;     explorer / indent / input / picker / notifier / quickfile / scope /
+;;     scroll / statuscolumn / words は明示的に切っている。Emacs 側も同じく
+;;     起動画面だけを入れ、他は対応するものを個別に選んでいる。
+;;   smear-cursor           -> 入れない (nvim 側も enabled=false)
 ;;
-;; キーバインドは evil で vim に寄せている。leader も nvim と同じ Space。
+;; 揃えるのはプラグインの構成まで。キーバインドは Emacs の標準を壊さないように
+;; しており、vim 化 (evil) はしていない。consult のように既存コマンドを置き換え
+;; るものは README が薦める割り当てに従う。
 
 ;;; Code:
 
@@ -131,55 +150,68 @@
 ;;; 見た目
 ;;; ---------------------------------------------------------------------------
 
-;; nvim の asiimov (オレンジ #ff6b35 + ダーク) に寄せる。組み込みテーマを土台に
-;; アクセントだけ合わせているので、外部テーマへの依存がない。
-(load-theme 'modus-vivendi t)
-
-(custom-set-faces
- '(hl-line ((t (:background "#2a2a2a"))))
- '(region ((t (:background "#3f3f4f"))))
- '(cursor ((t (:background "#ff6b35"))))
- '(mode-line ((t (:background "#1e1e1e" :foreground "#e0e0e0"))))
- '(mode-line-inactive ((t (:background "#1e1e1e" :foreground "#6e6e6e")))))
+;; nvim の colors/asiimov.lua をそのまま写したテーマ。同じディレクトリに置いて
+;; あるので、読み込み先に自分を加えてから有効にする。
+(add-to-list 'custom-theme-load-path
+             (file-name-directory (or load-file-name buffer-file-name)))
+(load-theme 'asiimov t)
 
 (use-package which-key
   :ensure nil                           ; Emacs 30 に同梱
   :init (which-key-mode 1)
   :custom (which-key-idle-delay 0.4))
 
+;; nvim: lualine
+;;
+;; ただし nvim 側は laststatus=0 でステータスラインを隠し、statusline を "─" に
+;; している。Emacs で mode-line を完全に消すと現在のモードや位置が分からなく
+;; なるため、行を細く保ったうえで内容を最小限にする。
+(use-package doom-modeline
+  :init (doom-modeline-mode 1)
+  :custom
+  (doom-modeline-height 1)
+  (doom-modeline-bar-width 3)
+  (doom-modeline-buffer-encoding nil)
+  (doom-modeline-icon nil))            ; terminal では表示が崩れるため使わない
+
+;; nvim: vimade (フォーカスのない窓を薄くする)
+(use-package auto-dim-other-buffers
+  :init (auto-dim-other-buffers-mode 1)
+  :custom (auto-dim-other-buffers-dim-on-focus-out t))
+
 ;;; ---------------------------------------------------------------------------
-;;; evil (vim のキーバインド)
+;;; 起動画面 (snacks.nvim の dashboard 相当)
 ;;; ---------------------------------------------------------------------------
 
-(use-package evil
-  :init
-  (setq evil-want-integration t
-        evil-want-keybinding nil        ; evil-collection に任せる
-        evil-want-C-u-scroll t
-        evil-undo-system 'undo-redo
-        ;; nvim 側で virtualedit=onemore にしているのと同じ狙い
-        evil-move-beyond-eol t
-        evil-move-cursor-back nil)
+;; nvim 側のボタン構成をそのまま写す。
+;;   f Find File / r Recent Files / c Config / s Restore Session
+;;   L Lazy (パッケージ管理) / q Quit
+(use-package dashboard
+  :init (dashboard-setup-startup-hook)
+  :custom
+  (dashboard-banner-logo-title "")
+  (dashboard-startup-banner nil)        ; nvim 側の header も空
+  (dashboard-center-content t)
+  (dashboard-vertically-center-content t)
+  (dashboard-show-shortcuts t)
+  (dashboard-set-footer nil)
+  (dashboard-set-heading-icons nil)     ; terminal ではアイコンを使わない
+  (dashboard-set-file-icons nil)
+  (dashboard-items nil)                 ; 一覧ではなくボタンだけを出す
+  (dashboard-navigation-cycle t)
   :config
-  (evil-mode 1)
-
-  ;; nvim: <C-j><C-k> で Esc
-  ;;
-  ;; 逆順の C-k C-j は登録しない。Emacs では C-k が kill-line に割り当たって
-  ;; いて prefix ではないため、その先に別のキーを繋げられない
-  ;; ("Key sequence C-k C-j starts with non-prefix key C-k")。
-  ;; insert state で C-k を潰してまで両順序に対応する価値はないと判断した。
-  (evil-define-key 'insert 'global (kbd "C-j C-k") #'evil-normal-state)
-
-  ;; nvim: 誤操作を避けるため p / q / Q / @ を無効化
-  (evil-define-key 'normal 'global (kbd "p") #'ignore)
-  (evil-define-key 'normal 'global (kbd "q") #'ignore)
-  (evil-define-key 'normal 'global (kbd "Q") #'ignore)
-  (evil-define-key 'normal 'global (kbd "@") #'ignore))
-
-(use-package evil-collection
-  :after evil
-  :config (evil-collection-init))
+  ;; snacks の keys に相当するもの。dashboard 側に同等の仕組みがないため、
+  ;; navigator として並べる。
+  (setq dashboard-navigator-buttons
+        `((("" "Find File"        "" (lambda (&rest _) (project-find-file)) 'default)
+           ("" "Recent Files"     "" (lambda (&rest _) (consult-recent-file)) 'default)
+           ("" "Config"           "" (lambda (&rest _)
+                                        (let ((default-directory user-emacs-directory))
+                                          (call-interactively #'find-file)))
+            'default))
+          (("" "Restore Session"  "" (lambda (&rest _) (desktop-read)) 'default)
+           ("" "Packages"         "" (lambda (&rest _) (elpaca-manager)) 'default)
+           ("" "Quit"             "" (lambda (&rest _) (save-buffers-kill-terminal)) 'default)))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; 補完 UI (fzf-lua / snacks picker 相当)
@@ -197,14 +229,24 @@
 (use-package marginalia
   :init (marginalia-mode 1))
 
+;; キーは consult が README で薦めている割り当てに従う。既存のコマンドを
+;; 置き換える形になっている (C-x b が switch-to-buffer から consult-buffer へ、
+;; など) ので、Emacs の操作を覚えたまま使える。
+;;
+;; nvim 側の <C-l> (live_grep) を C-l に割り当てると Emacs の
+;; recenter-top-bottom を潰すことになるため、search 系の M-s に置いている。
 (use-package consult
   :bind
-  (;; nvim: <Leader><tab> でバッファ一覧
-   ("C-c b" . consult-buffer)
-   ;; nvim: <C-l> で live_grep
-   ("C-l" . consult-ripgrep)
-   ;; trouble 相当
-   ("C-c d" . consult-flymake))
+  (("C-x b"   . consult-buffer)         ; switch-to-buffer の置き換え
+   ("C-x 4 b" . consult-buffer-other-window)
+   ("C-x r b" . consult-bookmark)
+   ("M-y"     . consult-yank-pop)       ; yank-pop の置き換え
+   ("M-g g"   . consult-goto-line)      ; goto-line の置き換え
+   ("M-g i"   . consult-imenu)
+   ("M-g f"   . consult-flymake)        ; trouble 相当
+   ("M-s r"   . consult-ripgrep)        ; nvim の live_grep
+   ("M-s l"   . consult-line)
+   ("M-s f"   . consult-find))
   :custom
   (consult-narrow-key "<"))
 
@@ -234,10 +276,21 @@
   (unless (display-graphic-p)
     (corfu-terminal-mode 1)))
 
+;; nvim の nvim-cmp は sources を
+;;   1. skkeleton / nvim_lsp / luasnip / nvim_lua
+;;   2. buffer (3 文字以上、表示中のバッファのみ) / path
+;; の 2 段で引いている。前段が出たら後段は使わない。
+;; Emacs の completion-at-point-functions は先頭から順に試すので、同じ並びにする。
 (use-package cape
   :init
+  ;; 後ろから足すと先頭に積まれるため、優先度の低いものから登録する
   (add-hook 'completion-at-point-functions #'cape-file)
-  (add-hook 'completion-at-point-functions #'cape-dabbrev))
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)   ; buffer 相当
+  :custom
+  ;; nvim: keyword_length = 3
+  (cape-dabbrev-min-length 3)
+  ;; nvim: 表示中のバッファのみを対象にする
+  (cape-dabbrev-check-other-buffers t))
 
 ;;; ---------------------------------------------------------------------------
 ;;; LSP (nvim-lspconfig + mason 相当)
@@ -316,11 +369,57 @@
 
 ;; nvim 側は denops + skkeleton。Emacs では ddskk が同じ SKK 方式。
 ;; 辞書は初回起動時に取得を促されるため、必要になってから設定する。
+;;
+;; C-x C-j は SKK の慣習だが、Emacs では dired-jump の既定でもある。日本語入力の
+;; 方が使う頻度が高いため SKK に譲り、dired へは C-x d から入る。
 (use-package ddskk
   :bind ("C-x C-j" . skk-mode)
   :custom
   (skk-egg-like-newline t)
   (skk-show-annotation nil))
+
+;;; ---------------------------------------------------------------------------
+;;; ターミナル (toggleterm 相当)
+;;; ---------------------------------------------------------------------------
+
+;; nvim 側は <C-t> で float のターミナルを開く。Emacs には組み込みの term/shell も
+;; あるが、eat は端末エミュレーションが素直で、terminal 版でもそのまま動く。
+(use-package eat
+  :bind ("C-c t" . eat)
+  :custom
+  (eat-kill-buffer-on-exit t))         ; nvim: close_on_exit = true
+
+;;; ---------------------------------------------------------------------------
+;;; markdown (render-markdown 相当)
+;;; ---------------------------------------------------------------------------
+
+(use-package markdown-mode
+  :mode ("\\.md\\'" "\\.mdx\\'")
+  :custom
+  (markdown-fontify-code-blocks-natively t)
+  (markdown-hide-markup nil))
+
+;;; ---------------------------------------------------------------------------
+;;; カレンダー (calendar.vim 相当)
+;;; ---------------------------------------------------------------------------
+
+;; nvim 側は Google カレンダー / タスクと連携させている。calfw も同じ位置づけの
+;; もので、org や ical を取り込める。
+(use-package calfw
+  :bind ("C-c a" . cfw:open-calendar-buffer))
+
+(use-package calfw-org
+  :after calfw)
+
+;;; ---------------------------------------------------------------------------
+;;; タグの自動補完 (nvim-ts-autotag 相当)
+;;; ---------------------------------------------------------------------------
+
+;; HTML/JSX で開始タグを閉じたときに終了タグを作る。Emacs は sgml-mode に同等の
+;; 機能を持っているため、外部パッケージは要らない。
+(add-hook 'sgml-mode-hook #'sgml-electric-tag-pair-mode)
+(add-hook 'html-mode-hook #'sgml-electric-tag-pair-mode)
+(add-hook 'mhtml-mode-hook #'sgml-electric-tag-pair-mode)
 
 ;;; ---------------------------------------------------------------------------
 ;;; REST クライアント (kulala 相当)
@@ -346,24 +445,11 @@
 ;;; プロジェクト (project.nvim 相当)
 ;;; ---------------------------------------------------------------------------
 
+;; project.el は C-x p を prefix として持っている (C-x p f でファイル検索、
+;; C-x p p でプロジェクト切り替え、C-x p g で grep)。標準のままで nvim の
+;; <Leader>p / <C-p> に相当する操作ができるため、独自の割り当ては足さない。
 (use-package project
-  :ensure nil
-  :bind
-  (;; nvim: <Leader>p / <C-p> でファイル検索
-   ("C-c p" . project-find-file)
-   ("C-x p" . project-switch-project)))
-
-;;; ---------------------------------------------------------------------------
-;;; leader キー (nvim と同じ Space)
-;;; ---------------------------------------------------------------------------
-
-(with-eval-after-load 'evil
-  (evil-define-key 'normal 'global (kbd "SPC p") #'project-find-file)
-  (evil-define-key 'normal 'global (kbd "SPC k") #'magit-status)
-  (evil-define-key 'normal 'global (kbd "SPC <tab>") #'consult-buffer)
-  (evil-define-key 'normal 'global (kbd "SPC f") #'consult-ripgrep)
-  (evil-define-key 'normal 'global (kbd "SPC d") #'consult-flymake)
-  (evil-define-key 'normal 'global (kbd "SPC e") #'dired-jump))
+  :ensure nil)
 
 ;;; ---------------------------------------------------------------------------
 ;;; 後始末
