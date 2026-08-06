@@ -125,8 +125,17 @@
   (setq backup-directory-alist `(("." . ,(expand-file-name "backup/" dir)))
         auto-save-file-name-transforms `((".*" ,(expand-file-name "auto-save/" dir) t))
         lock-file-name-transforms `((".*" ,(expand-file-name "lock/" dir) t))
-        custom-file (expand-file-name "custom.el" dir))
-  (dolist (d '("backup/" "auto-save/" "lock/"))
+        custom-file (expand-file-name "custom.el" dir)
+        ;; 履歴の類も同じ場所にまとめる。既定では user-emacs-directory の
+        ;; 直下に散らばり、設定ファイルと混ざる
+        recentf-save-file (expand-file-name "recentf" dir)
+        save-place-file (expand-file-name "places" dir)
+        savehist-file (expand-file-name "history" dir)
+        project-list-file (expand-file-name "projects" dir)
+        transient-history-file (expand-file-name "transient/history.el" dir)
+        transient-levels-file (expand-file-name "transient/levels.el" dir)
+        transient-values-file (expand-file-name "transient/values.el" dir))
+  (dolist (d '("backup/" "auto-save/" "lock/" "transient/"))
     (make-directory (expand-file-name d dir) t)))
 
 ;; custom-set-variables の書き込み先を分けたので、あれば読む。
@@ -137,6 +146,23 @@
 
 ;; 質問を y/n に統一する。
 (setq use-short-answers t)
+
+;; 開いたファイルの履歴。dashboard の Recent Files と consult-recent-file が
+;; これを見るため、有効にしないとどちらも常に空になる。
+(use-package recentf
+  :ensure nil
+  :init (recentf-mode 1)
+  :custom
+  (recentf-max-saved-items 200)
+  (recentf-auto-cleanup 'never)         ; 起動のたびに存在確認をすると遅い
+  :config
+  ;; elpaca が取得したパッケージや自動生成物は履歴に残さない
+  (add-to-list 'recentf-exclude (expand-file-name "elpaca/" user-emacs-directory))
+  (add-to-list 'recentf-exclude (expand-file-name "var/" user-emacs-directory)))
+
+;; ファイル内のカーソル位置と、ミニバッファの入力履歴を残す。
+(save-place-mode 1)
+(savehist-mode 1)
 
 ;; terminal 版で親の端末の背景を透かす。nvim 側で guibg=none にしているのと同じ狙い。
 (defun i999rri/unset-terminal-background (&optional frame)
@@ -190,9 +216,13 @@
 ;;; 起動画面 (snacks.nvim の dashboard 相当)
 ;;; ---------------------------------------------------------------------------
 
-;; nvim 側のボタン構成をそのまま写す。
-;;   f Find File / r Recent Files / c Config / s Restore Session
-;;   L Lazy (パッケージ管理) / q Quit
+;; Emacs の dashboard は最近のファイルやプロジェクトを一覧で出し、番号キーで
+;; そこへ直接飛ぶのが基本の使い方。nvim の snacks は「キー + ラベル」を縦に
+;; 並べる形だが、一覧を捨ててボタンだけにすると起動直後に作業へ戻るという
+;; dashboard 本来の役割が失われるため、こちらは Emacs 側の作法に寄せる。
+;;
+;; nvim 側のボタン (Find File / Recent Files / Config / Session / Lazy / Quit) は
+;; 一覧に出ないものだけ navigator として残した。
 (use-package dashboard
   :init (dashboard-setup-startup-hook)
   :custom
@@ -202,34 +232,36 @@
   ;; dashboard-startup-banner は評価されない。
   (dashboard-center-content t)
   (dashboard-vertically-center-content t)
-  (dashboard-show-shortcuts t)
+  (dashboard-show-shortcuts t)          ; 番号キーで項目を開く
   (dashboard-set-footer nil)
   (dashboard-set-navigator t)
   (dashboard-set-heading-icons nil)     ; terminal ではアイコンを使わない
   (dashboard-set-file-icons nil)
-  (dashboard-items nil)                 ; 一覧ではなくボタンだけを出す
   (dashboard-navigation-cycle t)
+  (dashboard-projects-backend 'project-el)
+
+  (dashboard-items '((recents  . 5)
+                     (projects . 5)))
 
   ;; 何をどの順で描くかはこのリストで決まる。dashboard-set-navigator を立てる
   ;; だけではボタンは出ない (既定のリストに navigator が入っていないため)。
-  ;; nvim 側の header が空でボタンだけ並ぶ形に合わせて、必要なものだけ残す。
   (dashboard-startupify-list '(dashboard-insert-newline
+                               dashboard-insert-items
+                               dashboard-insert-newline
                                dashboard-insert-navigator
                                dashboard-insert-newline
                                dashboard-insert-init-info))
   :config
-  ;; snacks の keys に相当するもの。dashboard 側に同等の仕組みがないため、
-  ;; navigator として並べる。
+  ;; 一覧で辿れないものだけボタンにする。Recent Files と Restore Session は
+  ;; 上の items で足りるため置いていない。
   (setq dashboard-navigator-buttons
-        `((("" "Find File"        "" (lambda (&rest _) (project-find-file)) 'default)
-           ("" "Recent Files"     "" (lambda (&rest _) (consult-recent-file)) 'default)
-           ("" "Config"           "" (lambda (&rest _)
-                                        (let ((default-directory user-emacs-directory))
-                                          (call-interactively #'find-file)))
-            'default))
-          (("" "Restore Session"  "" (lambda (&rest _) (desktop-read)) 'default)
-           ("" "Packages"         "" (lambda (&rest _) (elpaca-manager)) 'default)
-           ("" "Quit"             "" (lambda (&rest _) (save-buffers-kill-terminal)) 'default)))))
+        `((("" "Find File" "" (lambda (&rest _) (call-interactively #'find-file)) 'default)
+           ("" "Config"    "" (lambda (&rest _)
+                                 (let ((default-directory i999rri/config-directory))
+                                   (call-interactively #'find-file)))
+            'default)
+           ("" "Packages"  "" (lambda (&rest _) (elpaca-manager)) 'default)
+           ("" "Quit"      "" (lambda (&rest _) (save-buffers-kill-terminal)) 'default)))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; 補完 UI (fzf-lua / snacks picker 相当)
