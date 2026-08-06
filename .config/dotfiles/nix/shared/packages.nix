@@ -51,6 +51,9 @@ with pkgs;
   file
   which
 
+  # task runner
+  just
+
   # nix authoring
   nixfmt
   nil

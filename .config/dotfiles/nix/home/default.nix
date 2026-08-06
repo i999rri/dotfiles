@@ -64,5 +64,34 @@ in
     fi
   '';
 
+  # bare repository の work-tree が $HOME なので、コミットには author の設定が
+  # 要る。生成先の ~/.config/git/ は .config/.gitignore で除外してあるため、
+  # リポジトリの内容としては追跡されない。
+  programs.git = {
+    enable = true;
+    userName = "i999rri";
+
+    # このリポジトリは public。実アドレスを平文で置くとファイル内容として
+    # 拾われるため、公開前提の noreply を使う。GitHub 上では同じアカウントに
+    # 紐づく
+    userEmail = "68542115+i999rri@users.noreply.github.com";
+
+    # cli.nix で入れている delta を diff の表示に使う
+    delta.enable = true;
+
+    extraConfig = {
+      init.defaultBranch = "main";
+
+      # 意図しないマージコミットを作らない
+      pull.ff = "only";
+
+      # 新しいブランチを push するのに -u を打たなくてよくする
+      push.autoSetupRemote = true;
+
+      # gh auth login で SSH を選んでいるため、HTTPS の URL でも SSH に寄せる
+      url."git@github.com:".insteadOf = "https://github.com/";
+    };
+  };
+
   programs.home-manager.enable = true;
 }

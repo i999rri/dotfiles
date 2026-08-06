@@ -26,6 +26,13 @@ end
 
 vim.opt.number = true
 
+-- normal では行末の 1 つ先にカーソルを置けないため、insert から抜けるたびに
+-- カーソルが 1 文字左へ動く。onemore にすると行末の先に留まれるので、モードを
+-- 切り替えても位置が変わらない。
+--
+-- 引き換えに $ が行末の 1 つ先を指すようになる点だけ挙動が変わる。
+vim.opt.virtualedit = "onemore"
+
 -- 行の表示
 vim.opt.cursorline = true
 vim.opt.cursorlineopt = "both"
@@ -43,17 +50,10 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold" }, {
     command = "checktime",
 })
 
--- ウインドウを離れて戻った時にはどのモードであったかを覚えていないため、ウインドウを離れたときは常にモードをリセットする
-vim.api.nvim_create_autocmd("FocusLost", {
-    pattern = "*",
-    callback = function()
-        if vim.bo.filetype == "toggleterm" then
-            return
-        end
-
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-    end,
-})
+-- ウインドウを離れたときにモードをリセットする処理は setup_ime_control() の中に移した。
+-- あれは IME の切り替えとセットの処理で、insert のまま離れて戻ると IME が無効な状態で
+-- 日本語を打とうとすることになるため normal に戻していた。IME 制御を行わない環境
+-- (WSL など fcitx / ibus のない環境) では、モードだけ解除されて不便になる。
 
 -- @return void
 local function vim_cmd()
@@ -187,6 +187,17 @@ local function setup_ime_control()
             pattern = "*",
             callback = function()
                 vim.fn.system(ime_enable)
+                -- 離れる時に IME を戻すため、insert のままだと戻ってきた時に
+                -- IME が無効な状態で日本語を打とうとすることになる。normal に
+                -- 落としておく。IME 制御をしない環境ではモードを保つので、
+                -- ここは制御が有効なときだけ行う
+                if vim.bo.filetype ~= "toggleterm" then
+                    vim.api.nvim_feedkeys(
+                        vim.api.nvim_replace_termcodes("<Esc>", true, false, true),
+                        "n",
+                        false
+                    )
+                end
             end,
         })
     end
