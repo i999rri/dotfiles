@@ -104,7 +104,43 @@
    `(font-lock-delimiter-face     ((t (:foreground ,grey))))
    `(font-lock-warning-face       ((t (:foreground ,red :weight bold))))
    `(font-lock-negation-char-face ((t (:foreground ,light-orange))))
+
+   ;; Emacs 29 以降で増えた分。指定しないと既定色のまま残り、他と揃わない。
+   ;; nvim 側の対応は Delimiter / SpecialChar / Identifier あたり。
+   `(font-lock-punctuation-face       ((t (:foreground ,grey))))
+   `(font-lock-bracket-face           ((t (:foreground ,grey))))
+   `(font-lock-misc-punctuation-face  ((t (:foreground ,grey))))
+   `(font-lock-escape-face            ((t (:foreground ,light-orange))))
+   `(font-lock-regexp-face            ((t (:foreground ,green))))
+   `(font-lock-regexp-grouping-backslash ((t (:foreground ,light-orange))))
+   `(font-lock-regexp-grouping-construct ((t (:foreground ,light-orange))))
+   `(font-lock-property-name-face     ((t (:foreground ,fg))))
+   `(font-lock-property-use-face      ((t (:foreground ,fg))))
+   `(font-lock-variable-use-face      ((t (:foreground ,fg))))
+   `(font-lock-function-call-face     ((t (:foreground ,blue))))
+   `(font-lock-doc-markup-face        ((t (:foreground ,purple))))
+
    `(show-paren-match ((t (:foreground ,orange :background ,grey-3 :weight bold))))
+   `(show-paren-mismatch ((t (:foreground ,white :background ,red :weight bold))))
+
+   ;; 端末やコンパイル結果の出力に使われる 16 色。既定のままだと red3 や blue2
+   ;; といったパレット外の色が混ざる。
+   `(ansi-color-black          ((t (:foreground ,black      :background ,black))))
+   `(ansi-color-red            ((t (:foreground ,red        :background ,red))))
+   `(ansi-color-green          ((t (:foreground ,green      :background ,green))))
+   `(ansi-color-yellow         ((t (:foreground ,yellow-orange :background ,yellow-orange))))
+   `(ansi-color-blue           ((t (:foreground ,blue       :background ,blue))))
+   `(ansi-color-magenta        ((t (:foreground ,purple     :background ,purple))))
+   `(ansi-color-cyan           ((t (:foreground ,cyan       :background ,cyan))))
+   `(ansi-color-white          ((t (:foreground ,white      :background ,white))))
+   `(ansi-color-bright-black   ((t (:foreground ,light-grey :background ,light-grey))))
+   `(ansi-color-bright-red     ((t (:foreground ,red        :background ,red))))
+   `(ansi-color-bright-green   ((t (:foreground ,green      :background ,green))))
+   `(ansi-color-bright-yellow  ((t (:foreground ,orange     :background ,orange))))
+   `(ansi-color-bright-blue    ((t (:foreground ,blue       :background ,blue))))
+   `(ansi-color-bright-magenta ((t (:foreground ,purple     :background ,purple))))
+   `(ansi-color-bright-cyan    ((t (:foreground ,cyan       :background ,cyan))))
+   `(ansi-color-bright-white   ((t (:foreground ,white      :background ,white))))
 
    ;; diff (nvim の DiffAdd 等)
    `(diff-added       ((t (:foreground ,green         :background "#1a3a1a"))))
@@ -147,7 +183,39 @@
    `(dashboard-banner-logo-title ((t (:foreground ,orange :weight bold))))
 
    ;; minibuffer
-   `(minibuffer-prompt ((t (:foreground ,orange :weight bold))))))
+   `(minibuffer-prompt ((t (:foreground ,orange :weight bold))))
+
+   ;; 補完の注釈まわり。既定のままだと色が付かず、候補と区別できない
+   `(completions-annotations     ((t (:foreground ,comment :slant italic))))
+   `(completions-first-difference ((t (:foreground ,orange :weight bold))))
+   `(corfu-annotations           ((t (:foreground ,comment))))
+   `(corfu-deprecated            ((t (:foreground ,light-grey :strike-through t))))
+   `(marginalia-file-name        ((t (:foreground ,comment))))
+   `(marginalia-documentation    ((t (:foreground ,comment :slant italic))))
+   `(marginalia-size             ((t (:foreground ,blue))))
+   `(marginalia-date             ((t (:foreground ,green))))
+   `(marginalia-key              ((t (:foreground ,orange))))
+   `(consult-file                ((t (:foreground ,fg))))
+   `(consult-line-number         ((t (:foreground ,light-grey))))
+
+   ;; 汎用の UI 要素。escape-glyph などは既定が cyan でパレットから外れる
+   `(shadow              ((t (:foreground ,light-grey))))
+   `(link                ((t (:foreground ,blue :underline t))))
+   `(link-visited        ((t (:foreground ,purple :underline t))))
+   `(button              ((t (:foreground ,blue :underline t))))
+   `(escape-glyph        ((t (:foreground ,light-orange))))
+   `(homoglyph           ((t (:foreground ,light-orange))))
+   `(isearch-fail        ((t (:foreground ,white :background ,red))))
+   `(secondary-selection ((t (:background ,grey-3))))
+   `(trailing-whitespace ((t (:background ,red))))
+   `(header-line         ((t (:foreground ,grey :background ,dark-grey))))
+   `(tooltip             ((t (:foreground ,fg :background ,dark-grey))))
+   `(help-key-binding    ((t (:foreground ,orange :background ,dark-grey))))
+
+   ;; コンパイル結果 (nvim の Error / WarningMsg に対応)
+   `(compilation-error   ((t (:foreground ,red :weight bold))))
+   `(compilation-warning ((t (:foreground ,yellow-orange :weight bold))))
+   `(compilation-info    ((t (:foreground ,blue))))))
 
 ;;;###autoload
 (when (and (boundp 'custom-theme-load-path) load-file-name)
