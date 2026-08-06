@@ -165,12 +165,34 @@
 (savehist-mode 1)
 
 ;; terminal 版で親の端末の背景を透かす。nvim 側で guibg=none にしているのと同じ狙い。
+;; GUI では背景を持つ必要があるので何もしない。
 (defun i999rri/unset-terminal-background (&optional frame)
   "FRAME が terminal なら背景色を指定しない状態にする。"
   (unless (display-graphic-p frame)
     (set-face-background 'default "unspecified-bg" frame)))
 (add-hook 'window-setup-hook #'i999rri/unset-terminal-background)
 (add-hook 'after-make-frame-functions #'i999rri/unset-terminal-background)
+
+;; フォント。Ghostty と nvim で使っているものに合わせる。
+;;
+;; Windows 版の Emacs は -nw だと Windows のコンソール API を直接叩くため、
+;; ConPTY ベースの端末では initialize_w32_display に失敗する
+;; ("GetConsoleScreenBufferInfo failed")。このため Windows では GUI で使う。
+(defconst i999rri/font-family "JetBrainsMono NFM"
+  "使うフォント。Nerd Font Mono 版を指す。")
+
+(defun i999rri/setup-font (&optional frame)
+  "FRAME にフォントを設定する。GUI のときだけ意味がある。"
+  (when (and (display-graphic-p frame)
+             (member i999rri/font-family (font-family-list frame)))
+    (set-face-attribute 'default frame :family i999rri/font-family :height 110)
+    ;; 日本語も同じ系列で揃える。指定しないと別のフォントが選ばれて
+    ;; 行の高さがずれる
+    (set-fontset-font t 'japanese-jisx0208
+                      (font-spec :family i999rri/font-family) frame)))
+
+(add-hook 'window-setup-hook #'i999rri/setup-font)
+(add-hook 'after-make-frame-functions #'i999rri/setup-font)
 
 ;;; ---------------------------------------------------------------------------
 ;;; 見た目
@@ -205,7 +227,9 @@
   (doom-modeline-height 1)
   (doom-modeline-bar-width 3)
   (doom-modeline-buffer-encoding nil)
-  (doom-modeline-icon nil))            ; terminal では表示が崩れるため使わない
+  ;; アイコンは Nerd Font があれば出せる。terminal では字幅の扱いが端末依存で
+  ;; 崩れることがあるため GUI のときだけ有効にする
+  (doom-modeline-icon (display-graphic-p)))
 
 ;; nvim: vimade (フォーカスのない窓を薄くする)
 (use-package auto-dim-other-buffers
@@ -226,6 +250,9 @@
 (use-package dashboard
   :init (dashboard-setup-startup-hook)
   :custom
+  ;; emacsclient で新しいフレームを開いたときにも出す。これがないと
+  ;; dashboard-setup-startup-hook の判定から外れた場合に *scratch* になる
+  (initial-buffer-choice (lambda () (get-buffer-create dashboard-buffer-name)))
   (dashboard-banner-logo-title "")
   ;; nvim 側は header が空なので、こちらもバナーを出さない。下の
   ;; dashboard-startupify-list から dashboard-insert-banner を外してあるため、
@@ -235,8 +262,8 @@
   (dashboard-show-shortcuts t)          ; 番号キーで項目を開く
   (dashboard-set-footer nil)
   (dashboard-set-navigator t)
-  (dashboard-set-heading-icons nil)     ; terminal ではアイコンを使わない
-  (dashboard-set-file-icons nil)
+  (dashboard-set-heading-icons (display-graphic-p))
+  (dashboard-set-file-icons (display-graphic-p))
   (dashboard-navigation-cycle t)
   (dashboard-projects-backend 'project-el)
 
