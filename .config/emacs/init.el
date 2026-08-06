@@ -150,10 +150,17 @@
 ;;; 見た目
 ;;; ---------------------------------------------------------------------------
 
-;; nvim の colors/asiimov.lua をそのまま写したテーマ。同じディレクトリに置いて
-;; あるので、読み込み先に自分を加えてから有効にする。
-(add-to-list 'custom-theme-load-path
-             (file-name-directory (or load-file-name buffer-file-name)))
+;; この設定ファイルが置かれているディレクトリ。
+;;
+;; user-emacs-directory は symlink を辿らないため使えない (Windows 側は
+;; AppData\Roaming\.emacs.d から dotfiles にリンクしている)。また load-file-name
+;; は評価される場所によって変わるので、ここで一度だけ確定させておく。
+(defconst i999rri/config-directory
+  (file-name-directory (file-truename (or load-file-name buffer-file-name)))
+  "init.el が実際に置かれているディレクトリ。")
+
+;; nvim の colors/asiimov.lua をそのまま写したテーマ。
+(add-to-list 'custom-theme-load-path i999rri/config-directory)
 (load-theme 'asiimov t)
 
 (use-package which-key
@@ -190,15 +197,26 @@
   :init (dashboard-setup-startup-hook)
   :custom
   (dashboard-banner-logo-title "")
-  (dashboard-startup-banner nil)        ; nvim 側の header も空
+  ;; nvim 側は header が空なので、こちらもバナーを出さない。下の
+  ;; dashboard-startupify-list から dashboard-insert-banner を外してあるため、
+  ;; dashboard-startup-banner は評価されない。
   (dashboard-center-content t)
   (dashboard-vertically-center-content t)
   (dashboard-show-shortcuts t)
   (dashboard-set-footer nil)
+  (dashboard-set-navigator t)
   (dashboard-set-heading-icons nil)     ; terminal ではアイコンを使わない
   (dashboard-set-file-icons nil)
   (dashboard-items nil)                 ; 一覧ではなくボタンだけを出す
   (dashboard-navigation-cycle t)
+
+  ;; 何をどの順で描くかはこのリストで決まる。dashboard-set-navigator を立てる
+  ;; だけではボタンは出ない (既定のリストに navigator が入っていないため)。
+  ;; nvim 側の header が空でボタンだけ並ぶ形に合わせて、必要なものだけ残す。
+  (dashboard-startupify-list '(dashboard-insert-newline
+                               dashboard-insert-navigator
+                               dashboard-insert-newline
+                               dashboard-insert-init-info))
   :config
   ;; snacks の keys に相当するもの。dashboard 側に同等の仕組みがないため、
   ;; navigator として並べる。
