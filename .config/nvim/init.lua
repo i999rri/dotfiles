@@ -33,6 +33,11 @@ vim.opt.number = true
 -- 引き換えに $ が行末の 1 つ先を指すようになる点だけ挙動が変わる。
 vim.opt.virtualedit = "onemore"
 
+-- 既定では normal がブロック、insert が細い縦棒になる。桁が同じでも、ブロックは
+-- 文字を覆い、縦棒は文字の左端に立つため、モードを切り替えるとカーソルが半文字
+-- ぶん動いたように見える。全モードをブロックに揃えて見た目の位置を固定する。
+vim.opt.guicursor = "a:block"
+
 -- 行の表示
 vim.opt.cursorline = true
 vim.opt.cursorlineopt = "both"
