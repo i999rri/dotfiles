@@ -547,6 +547,42 @@
   ;; C-x b で自分が作ったバッファ。裏方は閉じたときの戻り先と同じ基準で外れる。
   (setq better-jumper--buffer-targets "\\`[^*/\\\\]+\\'")
 
+  ;; dired は記録しない。
+  ;;
+  ;; ディレクトリを開くとバッファ名がその末尾の名前になる (.config/emacs/ なら
+  ;; "emacs")。上の判定は名前しか見ないためファイルと区別が付かず、戻り先として
+  ;; 積まれてしまう。C-x C-f でディレクトリを経由してファイルを開くと、M-[ が
+  ;; その一覧に飛ぶ。通り道であって戻りたい場所ではない。
+  (defun i999rri/jump-record-p (&rest _)
+    "今のバッファを jump list に積んでよいかを返す。"
+    (not (derived-mode-p 'dired-mode)))
+
+  (advice-add 'better-jumper--push :before-while #'i999rri/jump-record-p)
+
+  ;; 消えたバッファは読み飛ばす。
+  ;;
+  ;; 名前で覚えたものは復元できない。戻ろうとした時点でそのバッファが閉じられて
+  ;; いると、switch-to-buffer が同じ名前の空のバッファを新しく作る。消えたことも
+  ;; 知らされず、中身の無い偽物に着地する。
+  ;;
+  ;; 行き先が「名前で覚えたもの」かつ実体が無い場合は、同じ向きへ読み進める。
+  ;; ファイルは閉じていても開き直せるので対象にしない。
+  (defun i999rri/jump-skip-dead (fn idx shift &optional context)
+    "FN で跳ぶ前に、実体の無い行き先を SHIFT の向きへ読み飛ばす。"
+    (let* ((jump-list (better-jumper--get-jump-list context))
+           (size (ring-length jump-list))
+           (step (if (>= shift 0) 1 -1))
+           (s shift))
+      (while (let ((i (+ idx s)))
+               (and (>= i 0) (< i size)
+                    (let ((name (nth 0 (ring-ref jump-list i))))
+                      (and (string-match-p better-jumper--buffer-targets name)
+                           (not (get-buffer name))))))
+        (setq s (+ s step)))
+      (funcall fn idx s context)))
+
+  (advice-add 'better-jumper--jump :around #'i999rri/jump-skip-dead)
+
   ;; 積む対象。vim が jump として扱うものに対応させている
   (dolist (cmd '(xref-find-definitions          ; タグジャンプ
                  xref-find-references
