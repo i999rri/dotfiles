@@ -491,6 +491,56 @@
   :after (embark consult))
 
 ;;; ---------------------------------------------------------------------------
+;;; jump list (nvim の C-o / C-i 相当)
+;;; ---------------------------------------------------------------------------
+
+;; Emacs には「どの移動が jump か」という概念が無い。vim は gg や G、検索、タグ
+;; ジャンプを本体が jump として扱うが、Emacs にあるのはマークリングだけで、積まれる
+;; 条件も、前へ進む手段が無いことも vim とは違う。
+;;
+;; better-jumper が持っているのは箱と前後移動だけで、位置を積む処理は動かない。
+;; evil を入れていれば evil-set-jump に相乗りするが、こちらは入れていないため
+;; 「何を jump とみなすか」を下の advice で自分で決めている。
+;;
+;; 少なすぎると戻りたい所へ戻れず、多すぎると M-[ が細かく刻まれる。増減はここを
+;; 触る。
+
+;; better-jumper-set-jump は積む位置を引数に取れる。advice にそのまま渡すと元の
+;; 関数の引数が位置として解釈されてしまうため、捨ててから呼ぶ。
+(defun i999rri/set-jump (&rest _)
+  "引数を無視して今の位置を jump list に積む。"
+  (when (fboundp 'better-jumper-set-jump)
+    (better-jumper-set-jump)))
+
+(use-package better-jumper
+  ;; :bind だけだとキーを押すまで読み込まれず、それまでの移動が積まれない
+  :demand t
+  :bind (("M-[" . better-jumper-jump-backward)    ; nvim: C-o
+         ("M-]" . better-jumper-jump-forward)     ; nvim: C-i
+         ;; 端末では M-[ が CSI (ESC [) の先頭と重なる。emacs -nw でも辿れるよう
+         ;; 同じものを C-c 側にも置いておく
+         ("C-c [" . better-jumper-jump-backward)
+         ("C-c ]" . better-jumper-jump-forward))
+  :config
+  (better-jumper-mode 1)
+
+  ;; 積む対象。vim が jump として扱うものに対応させている
+  (dolist (cmd '(xref-find-definitions    ; タグジャンプ
+                 xref-find-references
+                 consult-line             ; 検索 (/ と n)
+                 consult-ripgrep
+                 consult-imenu
+                 consult-goto-line        ; :123
+                 consult-flymake
+                 consult-buffer           ; ファイル間の移動
+                 beginning-of-buffer      ; gg
+                 end-of-buffer))          ; G
+    (advice-add cmd :before #'i999rri/set-jump))
+
+  ;; 素の検索は、始めた位置を積む
+  (add-hook 'isearch-mode-hook #'i999rri/set-jump))
+
+;;; ---------------------------------------------------------------------------
 ;;; インライン補完 (nvim-cmp 相当)
 ;;; ---------------------------------------------------------------------------
 
