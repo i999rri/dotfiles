@@ -143,8 +143,6 @@
 ;; 開くものなので残す。dashboard を残すと、実バッファを閉じ切ったときの
 ;; 落ち先がそこになり、起動直後と同じ画面に戻る。
 ;;
-;; 候補が尽きた場合は Emacs 側の最後の受け皿が使われ、この判定は通らない。
-;;
 ;; C-x <left> / <right> の行き先も同じ判定を使う。
 (defun i999rri/prev-buffer-skip-p (_window buffer _bury-or-kill)
   "BUFFER が裏方なら non-nil を返し、戻り先の候補から外す。"
@@ -153,6 +151,70 @@
                   '(eat-mode dashboard-mode)))))
 
 (setq switch-to-prev-buffer-skip #'i999rri/prev-buffer-skip-p)
+
+;; 戻れるものが尽きたときは dashboard を出す。
+;;
+;; 上の判定にできるのは候補から外すことだけで、外し切って何も残らなかった場合は
+;; Emacs 側の最後の受け皿が使われる。そこはこの判定を通らないため、結局 *Messages*
+;; のような裏方に着地してしまう。
+;;
+;; そこで行き先が裏方だったときに限り dashboard へ差し替える。バッファが残って
+;; いなければ組み立て直すので、一度閉じた後でも帰る場所ができる。
+(defvar i999rri--dashboard-fallback-running nil
+  "dashboard を組み立てている最中かどうか。")
+
+(defun i999rri/dashboard-buffer ()
+  "dashboard のバッファを返す。無ければ組み立て直す。"
+  (when (and (bound-and-true-p dashboard-buffer-name)
+             (fboundp 'dashboard-refresh-buffer))
+    (or (get-buffer dashboard-buffer-name)
+        ;; 組み立てると選択中のウィンドウに表示されてしまうため、元に戻す
+        (save-window-excursion
+          (dashboard-refresh-buffer)
+          (get-buffer dashboard-buffer-name)))))
+
+(defun i999rri/show-dashboard-in (window)
+  "WINDOW が裏方を映しているなら dashboard に差し替える。"
+  ;; 組み立て直すとき古いバッファを kill するため、その巻き添えでここが再び
+  ;; 呼ばれる。組み立て中は入らない
+  (unless (or i999rri--dashboard-fallback-running
+              (not (window-live-p window))
+              (window-minibuffer-p window)
+              (window-dedicated-p window))
+    (when (i999rri/prev-buffer-skip-p window (window-buffer window) nil)
+      (let* ((i999rri--dashboard-fallback-running t)
+             (buf (i999rri/dashboard-buffer)))
+        (when (buffer-live-p buf)
+          (set-window-buffer window buf))))))
+
+;; 閉じたときの差し替えは、Emacs 30 では replace-buffer-in-windows が C 側にあり
+;; Lisp の switch-to-prev-buffer を経由しない。そのため kill-buffer 自体を包んで、
+;; そのバッファを映していた窓を閉じた後に見に行く。
+;;
+;; 窓の一覧は kill する前に取る。閉じた後では、どこに映っていたか辿れなくなる。
+;;
+;; dashboard 自身を閉じたときは何もしない。ここで出し直すと閉じられなくなる。
+(defun i999rri/kill-buffer-to-dashboard (fn &optional buffer-or-name)
+  "FN で BUFFER-OR-NAME を閉じ、映していた窓に戻り先が無ければ dashboard を出す。"
+  (let* ((buf (if buffer-or-name (get-buffer buffer-or-name) (current-buffer)))
+         (windows (and (buffer-live-p buf)
+                       (not (eq buf (get-buffer (bound-and-true-p dashboard-buffer-name))))
+                       (get-buffer-window-list buf nil t)))
+         (killed (funcall fn buffer-or-name)))
+    (when killed
+      (mapc #'i999rri/show-dashboard-in windows))
+    killed))
+
+(advice-add 'kill-buffer :around #'i999rri/kill-buffer-to-dashboard)
+
+;; C-x <left> / <right> で辿り着いた先が裏方だった場合も同じ扱いにする。
+;; こちらは Lisp から呼ばれるため、switch-to-prev-buffer を包めば足りる。
+(defun i999rri/fall-back-to-dashboard (&optional window &rest _)
+  "WINDOW の行き先が裏方しか残っていなければ dashboard に差し替える。"
+  (i999rri/show-dashboard-in (or window (selected-window))))
+
+(advice-add 'switch-to-prev-buffer :after #'i999rri/fall-back-to-dashboard)
+(advice-add 'switch-to-next-buffer :after #'i999rri/fall-back-to-dashboard)
 
 ;; バックアップと自動保存を一箇所に集める。既定では編集中のファイルの隣に
 ;; 散らかるため、git の作業ツリーが汚れる。
