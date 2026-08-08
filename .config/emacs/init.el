@@ -773,6 +773,48 @@
   :ensure nil)
 
 ;;; ---------------------------------------------------------------------------
+;;; タブ (プロジェクトごとの作業空間)
+;;; ---------------------------------------------------------------------------
+
+;; Emacs のタブは 2 種類ある。tab-bar はフレーム上部に並び、1 つのタブが窓の分割
+;; ごと丸ごと 1 つの作業空間を持つ。tab-line は窓ごとのバッファ一覧で、ブラウザの
+;; タブに近い。プロジェクトを横断するのが目的なので前者を使う。
+;;
+;; C-x t は Emacs が最初から持っている prefix で、C-x t p が
+;; project-other-tab-command (プロジェクトを新しいタブで開く) に繋がっている。
+;; 追加のパッケージは要らない。
+
+(defun i999rri/tab-name ()
+  "タブの名前。プロジェクト内ならプロジェクト名、そうでなければ既定の名前。"
+  ;; project-current はプロジェクト内なら 0.002ms で返るが、外だと根まで遡るため
+  ;; 3ms 近くかかる。負の結果は覚えてくれない。タブ名は再描画のたびに求まるので、
+  ;; 裏方バッファでは呼ばない。* で始まるものを外す基準は、閉じたときの戻り先や
+  ;; jump list に揃えてある。
+  (or (and (not (string-prefix-p "*" (buffer-name)))
+           (when-let* ((p (project-current nil)))
+             (project-name p)))
+      (tab-bar-tab-name-current)))
+
+(defun i999rri/tab-new-buffer ()
+  "新しいタブに出すバッファ。閉じ切ったときの落ち先と同じ場所にする。"
+  (or (i999rri/dashboard-buffer) (get-scratch-buffer-create)))
+
+(use-package tab-bar
+  :ensure nil
+  :custom
+  ;; タブが 1 つのときは帯を出さない。使い始めるまで画面を削らない
+  (tab-bar-show 1)
+  (tab-bar-tab-hints t)               ; 番号を振る
+  (tab-bar-close-button-show nil)     ; キーボードで閉じるのでボタンは要らない
+  (tab-bar-new-button-show nil)
+  (tab-bar-new-tab-choice #'i999rri/tab-new-buffer)
+  (tab-bar-tab-name-function #'i999rri/tab-name)
+  :bind (("C-<tab>"   . tab-next)
+         ("C-S-<tab>" . tab-previous))
+  :init
+  (tab-bar-mode 1))
+
+;;; ---------------------------------------------------------------------------
 ;;; 後始末
 ;;; ---------------------------------------------------------------------------
 
