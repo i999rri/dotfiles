@@ -197,8 +197,11 @@
 (defun i999rri/kill-buffer-to-dashboard (fn &optional buffer-or-name)
   "FN で BUFFER-OR-NAME を閉じ、映していた窓に戻り先が無ければ dashboard を出す。"
   (let* ((buf (if buffer-or-name (get-buffer buffer-or-name) (current-buffer)))
+         ;; 起動の途中ではまだ dashboard が読まれておらず、この変数は nil。
+         ;; get-buffer に nil を渡すと型エラーになるため、名前どうしで比べる
          (windows (and (buffer-live-p buf)
-                       (not (eq buf (get-buffer (bound-and-true-p dashboard-buffer-name))))
+                       (not (equal (buffer-name buf)
+                                   (bound-and-true-p dashboard-buffer-name)))
                        (get-buffer-window-list buf nil t)))
          (killed (funcall fn buffer-or-name)))
     (when killed
