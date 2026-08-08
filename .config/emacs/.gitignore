@@ -16,6 +16,8 @@ eln-cache/
 auto-save-list/
 transient/
 org-persist/
+# daemon の接続情報。起動のたびに書き換わる
+server/
 elpa/
 .emacs.desktop
 .emacs.desktop.lock
