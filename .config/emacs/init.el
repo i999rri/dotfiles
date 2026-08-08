@@ -619,9 +619,30 @@
 
 ;; eglot は Emacs 29 以降に同梱。mason に相当する「サーバーを自動で入れる」層は
 ;; ないので、言語サーバーは Nix や scoop 側で入れる。
+;; prog-mode に eglot-ensure を直接掛けると、サーバーの定義が無いモードでも起動を
+;; 試みる。emacs-lisp-mode がそれで、eglot-server-programs に該当が無いため推測結果
+;; の起動コマンドが nil になり、そこからプロセスを作ろうとして
+;; "Wrong type argument: processp, nil" になる。init.el を開くたびに出ていた。
+;; c++-mode や python-mode も同様に落ちる。
+;;
+;; 当てがあるときだけ起動する。定義が無ければ何もせず、定義があっても実行ファイルが
+;; 見つからなければ黙って見送る。サーバーを入れた時点で自然に有効になる。
+(defun i999rri/eglot-ensure-if-available ()
+  "この major-mode に使えるサーバーがあるときだけ eglot を起動する。"
+  ;; eglot--guess-contact は内部関数だが、モードの継承をたどって該当を探す処理は
+  ;; ここにしかない。引数なしで呼ぶ限り問い合わせは発生しない。
+  (when-let* ((contact (ignore-errors (eglot--guess-contact)))
+              (spec (nth 3 contact)))
+    (let ((program (car-safe spec)))
+      (if (stringp program)
+          (when (executable-find program)
+            (eglot-ensure))
+        ;; TCP 接続など、実行ファイル名で判断できない形は eglot に任せる
+        (eglot-ensure)))))
+
 (use-package eglot
   :ensure nil
-  :hook ((prog-mode . eglot-ensure))
+  :hook ((prog-mode . i999rri/eglot-ensure-if-available))
   :custom
   (eglot-autoshutdown t)
   (eglot-events-buffer-size 0))
