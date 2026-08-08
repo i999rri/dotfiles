@@ -289,7 +289,19 @@
 ;; nvim: vimade (フォーカスのない窓を薄くする)
 (use-package auto-dim-other-buffers
   :init (auto-dim-other-buffers-mode 1)
-  :custom (auto-dim-other-buffers-dim-on-focus-out t))
+  :custom (auto-dim-other-buffers-dim-on-focus-out t)
+  :config
+  ;; 既定の色は #122 で、これは #112222 のこと。背景 (#1e1e1e) と比べて赤成分
+  ;; だけが落ちるため、非アクティブになると画面が青緑がかって見える。色味を
+  ;; 持たない、背景を少し沈めただけの濃さにする。
+  ;;
+  ;; テーマ側ではなくここで設定するのは、このパッケージが遅延読み込みされ、
+  ;; テーマを適用した時点ではまだ face が存在しないため。テーマに書いても
+  ;; あとからパッケージ側の定義で上書きされてしまう。
+  (set-face-attribute 'auto-dim-other-buffers-face nil
+                      :background "#181818")
+  (set-face-attribute 'auto-dim-other-buffers-hide-face nil
+                      :background "#181818" :foreground "#181818"))
 
 ;;; ---------------------------------------------------------------------------
 ;;; 起動画面 (snacks.nvim の dashboard 相当)
