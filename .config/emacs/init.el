@@ -870,7 +870,7 @@
   ;; タブの幅の上限。auto-width は幅を揃えたうえで帯を埋めようと広げるため、
   ;; タブが少ないとここまで伸びる。既定の 220px / 20 桁は、プロジェクト名を
   ;; 出すには余る。下線を名前の幅に近づけたいので詰めている
-  (tab-bar-auto-width-max '((170) 16))
+  (tab-bar-auto-width-max '((140) 12))
   (tab-bar-close-button-show nil)     ; キーボードで閉じるのでボタンは要らない
   (tab-bar-new-button-show nil)
   (tab-bar-new-tab-choice #'i999rri/tab-new-buffer)
