@@ -125,7 +125,33 @@ wsl --shutdown
 
 これを切るとクリップボードの連携先が変わる (Wayland ではなく Windows 側の `clip.exe` / `Get-Clipboard`) が、そちらは NixOS 側で設定済み。詳細は [setup-nix.md](setup-nix.md) を参照。
 
-### 10. 確認
+### 10. Emacs を使う場合はリンクを張る
+
+```powershell
+scoop install emacs
+
+New-Item -ItemType SymbolicLink -Force `
+  -Path "$HOME\AppData\Roaming\.emacs.d" `
+  -Target "$HOME\source\repos\dotfiles\.config\emacs"
+```
+
+Windows の Emacs は `HOME` が未設定だと `~` を `%APPDATA%` と解釈するため、設定を読む場所が `AppData\Roaming\.emacs.d` になる。`HOME` を設定すれば `~/.config/emacs` を見るようになるが、環境変数を足すと他のツールにも影響が波及するので、リンクで繋ぐだけにしている。
+
+初回起動時に elpaca が全パッケージを取得するため 1〜2 分かかる。
+
+**Windows では GUI 版 (`runemacs`) を使う。** `emacs -nw` は Windows のコンソール API を直接叩く実装になっており、ConPTY ベースの端末では初期化に失敗する。
+
+```
+GetConsoleScreenBufferInfo failed in initialize_w32_display
+```
+
+terminal で使いたい場合は WSL 側に Emacs を入れる。dotfiles は `$HOME` に展開されるため、同じ設定がそのまま使える。
+
+フォントは `JetBrainsMono NFM` を使う (ステップ 4 で入れた Nerd Font)。入っていなければ既定のフォントにフォールバックする。
+
+構成は nvim 側と揃えてある (`.config/emacs/init.el` の冒頭に対応表がある)。キーバインドは Emacs の標準のままで、vim 化はしていない。
+
+### 11. 確認
 
 新しい pwsh タブを開いて以下が表示されれば成功:
 
