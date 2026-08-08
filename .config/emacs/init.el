@@ -106,6 +106,19 @@
 ;; nvim: vim.opt.cursorline = true
 (global-hl-line-mode 1)
 
+;; カーソルを縦線にする。既定の box は 1 文字ぶんを塗りつぶし、その下の文字を
+;; 反転させて表示するため、カーソルの乗っている文字が読みにくい。
+;;
+;; 幅は 2px。既定の bar は 1px で、15pt のフォントと line-spacing = 5 の行間に
+;; 対しては細く、視線を戻したときに見つけにくい。
+;;
+;; 色は asiimov の cursor face (Ghostty の cursor-color = ff6b35 と同じ) が持つ。
+(setq-default cursor-type '(bar . 2))
+
+;; 選択していないウィンドウにはカーソルを出さない。既定では中抜きの箱が残るが、
+;; 縦線にすると本物との差が細さの違いだけになり、今どこにいるのか読めなくなる。
+(setq cursor-in-non-selected-windows nil)
+
 ;; nvim: vim.opt.autoread = true と checktime の autocmd
 (global-auto-revert-mode 1)
 (setq global-auto-revert-non-file-buffers t
