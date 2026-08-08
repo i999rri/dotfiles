@@ -132,6 +132,28 @@
 ;; nvim: ultimate-autopair 相当
 (electric-pair-mode 1)
 
+;; バッファを閉じたとき、その窓が直前に表示していたものへ戻る。
+;;
+;; 戻ること自体は Emacs の既定の動作で、窓ごとに持っている履歴
+;; (window-prev-buffers) を遡っている。ただしそこには *Messages* や
+;; *Flymake log* のような裏方も同じように積まれるため、遡るうちに開いた覚えの
+;; ないバッファへ着地する。戻っていないように見えるのはこれが理由。
+;;
+;; 名前が * で始まるものを候補から外す。端末 (eat) と dashboard だけは自分で
+;; 開くものなので残す。dashboard を残すと、実バッファを閉じ切ったときの
+;; 落ち先がそこになり、起動直後と同じ画面に戻る。
+;;
+;; 候補が尽きた場合は Emacs 側の最後の受け皿が使われ、この判定は通らない。
+;;
+;; C-x <left> / <right> の行き先も同じ判定を使う。
+(defun i999rri/prev-buffer-skip-p (_window buffer _bury-or-kill)
+  "BUFFER が裏方なら non-nil を返し、戻り先の候補から外す。"
+  (and (string-prefix-p "*" (buffer-name buffer))
+       (not (memq (buffer-local-value 'major-mode buffer)
+                  '(eat-mode dashboard-mode)))))
+
+(setq switch-to-prev-buffer-skip #'i999rri/prev-buffer-skip-p)
+
 ;; バックアップと自動保存を一箇所に集める。既定では編集中のファイルの隣に
 ;; 散らかるため、git の作業ツリーが汚れる。
 (let ((dir (expand-file-name "var/" user-emacs-directory)))
