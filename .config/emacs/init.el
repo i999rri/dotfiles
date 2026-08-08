@@ -619,6 +619,7 @@
 
 ;; eglot は Emacs 29 以降に同梱。mason に相当する「サーバーを自動で入れる」層は
 ;; ないので、言語サーバーは Nix や scoop 側で入れる。
+
 ;; prog-mode に eglot-ensure を直接掛けると、サーバーの定義が無いモードでも起動を
 ;; 試みる。emacs-lisp-mode がそれで、eglot-server-programs に該当が無いため推測結果
 ;; の起動コマンドが nil になり、そこからプロセスを作ろうとして
@@ -645,7 +646,8 @@
   :hook ((prog-mode . i999rri/eglot-ensure-if-available))
   :custom
   (eglot-autoshutdown t)
-  (eglot-events-buffer-size 0))
+  ;; 通信ログを残さない。eglot-events-buffer-size は廃止され、設定しても効かない
+  (eglot-events-buffer-config '(:size 0 :format full)))
 
 ;; nvim: vim.diagnostic.config({ virtual_text = true })
 (use-package flymake
