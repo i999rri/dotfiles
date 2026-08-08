@@ -34,16 +34,19 @@
 (push '(background-color . "#1e1e1e") default-frame-alist)
 (push '(foreground-color . "#e0e0e0") default-frame-alist)
 
-;; フォント。値は .config/ghostty/config に合わせている
-;; (font-family = JetBrainsMono Nerd Font Mono Bold / font-size = 15)。
+;; フォント。大きさは .config/ghostty/config の font-size = 15 に合わせている。
 ;;
 ;; ここで指定するのは、フレームが作られた後に変えると桁数・行数が変わって
 ;; しまうため。ウィンドウのピクセル寸法は保たれる一方、1 文字の大きさが増える
-;; ぶん収まる文字数が減り、下で指定する 160x48 が無視されたように見える。
+;; ぶん収まる文字数が減り、下で指定するサイズが無視されたように見える。
 ;;
-;; Windows に入っているファミリ名は "JetBrainsMono NFM" で、Ghostty が使う
-;; "JetBrainsMono Nerd Font Mono" とは表記が異なる。
-(push '(font . "JetBrainsMono NFM-15:weight=bold") default-frame-alist)
+;; 太さは指定しない。ghostty 側は
+;;   font-family = "JetBrainsMono Nerd Font Mono Bold"
+;; と書いているが、この名前のファミリは存在せず (Windows にあるのは
+;; "JetBrainsMono NFM" で、Bold はその中のウェイト)、実際には解決できていない。
+;; また地の文を太字にすると、asiimov が Keyword や Function に付けている bold の
+;; 強調が効かなくなる。
+(push '(font . "JetBrainsMono NFM-15") default-frame-alist)
 
 ;; ウィンドウの初期サイズ。単位は行と桁で、実寸は上のフォントで決まる。
 ;; 80 桁のコードを開いて、横に補完やヘルプを出せる程度の幅にしてある。
