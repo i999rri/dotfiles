@@ -57,6 +57,23 @@
    `(vertical-border  ((t (:foreground ,dark-grey))))
    `(fill-column-indicator ((t (:foreground ,dark-grey))))
 
+   ;; タブ (tab-bar)
+   ;;
+   ;; 帯の背景を編集領域と揃えて境目を作らない。今いるタブはオレンジの文字と下線で
+   ;; 示す。ベタ塗りにしないのは、画面の上端に強い色面があると視線がそこで止まり、
+   ;; 本文へ戻るのに一拍かかるため。
+   ;;
+   ;; 指定がないと mode-line から色を引き継ぎ、選択中のタブが黒文字にオレンジの
+   ;; ベタ塗りになる。
+   `(tab-bar          ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(tab-bar-tab      ((t (:foreground ,orange :background ,bg-or-none
+                           :underline (:color ,orange)))))
+   `(tab-bar-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
+   ;; グループ (C-x t G) を使ったときの見え方も揃えておく
+   `(tab-bar-tab-group-current  ((t (:foreground ,orange :background ,bg-or-none))))
+   `(tab-bar-tab-group-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(tab-bar-tab-ungrouped      ((t (:foreground ,light-grey :background ,bg-or-none))))
+
    ;; 選択・検索
    ;; region は Ghostty の selection-foreground / selection-background に合わせる
    ;; (nvim の Visual は fg が白だが、端末側は背景色と同じ濃い色を使っている)

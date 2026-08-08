@@ -825,9 +825,12 @@
 (use-package tab-bar
   :ensure nil
   :custom
-  ;; タブが 1 つのときは帯を出さない。使い始めるまで画面を削らない
-  (tab-bar-show 1)
+  ;; タブが 1 つでも帯を出す。隠すと、今いるタブも機能が入っていることも見えない
+  (tab-bar-show t)
   (tab-bar-tab-hints t)               ; 番号を振る
+  ;; タブの間隔。背景のベタ塗りをやめたぶん、区切りが空白の幅だけになる。
+  ;; 既定は空白 1 つで、隣のタブの番号と続けて読めてしまう
+  (tab-bar-separator "   ")
   (tab-bar-close-button-show nil)     ; キーボードで閉じるのでボタンは要らない
   (tab-bar-new-button-show nil)
   (tab-bar-new-tab-choice #'i999rri/tab-new-buffer)
