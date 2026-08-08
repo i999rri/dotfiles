@@ -520,21 +520,54 @@
          ;; 端末では M-[ が CSI (ESC [) の先頭と重なる。emacs -nw でも辿れるよう
          ;; 同じものを C-c 側にも置いておく
          ("C-c [" . better-jumper-jump-backward)
-         ("C-c ]" . better-jumper-jump-forward))
+         ("C-c ]" . better-jumper-jump-forward)
+         ;; 下の advice に拾われない移動をする前に、手で目印を置く
+         ("C-c j" . better-jumper-set-jump))
   :config
   (better-jumper-mode 1)
 
+  ;; ファイルを開いていないバッファを拾えるようにする。
+  ;;
+  ;; better-jumper は位置を (ファイル名 . 位置) で持つため、buffer-file-name が
+  ;; nil のバッファは記録できない。その代わりバッファ名で代用する道があるが、
+  ;; 既定で通るのは *new* と *scratch* だけ。C-x b で作った作業用バッファは
+  ;; ここに引っかからず、黙って捨てられる。
+  ;;
+  ;; この正規表現は戻るときにも使われ、「バッファ名なら switch-to-buffer、
+  ;; そうでなければ find-file」の判定を兼ねている。パスにマッチさせてしまうと
+  ;; ファイルを開く代わりにパス名の空バッファが作られるため、区切り文字を含む
+  ;; ものは必ず外す。buffer-file-name は常に絶対パスなので、これで分かれる。
+  ;;
+  ;; 結果として通るのは、区切りを含まず * で始まらない名前 (C-x b で作ったもの)
+  ;; と、従来どおりの *new* / *scratch*。*Messages* などの裏方は入らない。
+  (setq better-jumper--buffer-targets
+        "\\`\\(?:\\*\\(?:new\\|scratch\\)\\*\\|[^*/\\\\]+\\)\\'")
+
   ;; 積む対象。vim が jump として扱うものに対応させている
-  (dolist (cmd '(xref-find-definitions    ; タグジャンプ
+  (dolist (cmd '(xref-find-definitions          ; タグジャンプ
                  xref-find-references
-                 consult-line             ; 検索 (/ と n)
+                 xref-go-back
+                 consult-line                   ; 検索 (/ と n)
                  consult-ripgrep
                  consult-imenu
-                 consult-goto-line        ; :123
+                 consult-goto-line              ; :123
                  consult-flymake
-                 consult-buffer           ; ファイル間の移動
-                 beginning-of-buffer      ; gg
-                 end-of-buffer))          ; G
+                 consult-buffer                 ; ファイル間の移動
+                 switch-to-buffer               ; consult を通さない場合
+                 find-file                      ; :e
+                 dired-find-file
+                 imenu
+                 goto-line
+                 beginning-of-buffer            ; gg
+                 end-of-buffer                  ; G
+                 beginning-of-defun             ; [[
+                 end-of-defun                   ; ]]
+                 backward-paragraph             ; {
+                 forward-paragraph              ; }
+                 move-to-window-line-top-bottom ; H M L
+                 pop-global-mark
+                 next-error
+                 previous-error))
     (advice-add cmd :before #'i999rri/set-jump))
 
   ;; 素の検索は、始めた位置を積む
