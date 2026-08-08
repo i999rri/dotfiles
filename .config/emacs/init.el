@@ -164,14 +164,21 @@
 (save-place-mode 1)
 (savehist-mode 1)
 
-;; terminal 版で親の端末の背景を透かす。nvim 側で guibg=none にしているのと同じ狙い。
-;; GUI では背景を持つ必要があるので何もしない。
-(defun i999rri/unset-terminal-background (&optional frame)
-  "FRAME が terminal なら背景色を指定しない状態にする。"
-  (unless (display-graphic-p frame)
-    (set-face-background 'default "unspecified-bg" frame)))
-(add-hook 'window-setup-hook #'i999rri/unset-terminal-background)
-(add-hook 'after-make-frame-functions #'i999rri/unset-terminal-background)
+;; terminal では親の端末の背景を透かし、GUI では背景色を持たせる。
+;; nvim 側で guibg=none にしているのと同じ狙い。
+;;
+;; frame を引数に取って毎回判定するのが要点。daemon は GUI のない状態で
+;; 起動するため、起動時に一度だけ判定すると「terminal である」と決まってしまい、
+;; あとから emacsclient で開いた GUI フレームまで背景を失う。
+(defun i999rri/apply-frame-background (&optional frame)
+  "FRAME の背景を、terminal なら透過、GUI なら通常の色にする。"
+  (let ((frame (or frame (selected-frame))))
+    (set-face-background 'default
+                         (if (display-graphic-p frame) "#1e1e1e" "unspecified-bg")
+                         frame)))
+
+(add-hook 'window-setup-hook #'i999rri/apply-frame-background)
+(add-hook 'after-make-frame-functions #'i999rri/apply-frame-background)
 
 ;; フォント。Ghostty と nvim で使っているものに合わせる。
 ;;
@@ -226,8 +233,14 @@
 
 ;; window-setup-hook では frame の実寸がまだ確定しておらず、ここで縮めると
 ;; 幅まで巻き添えになる。描画が落ち着いてから一度だけ行う。
+;;
+;; daemon では起動時にフレームがないため、emacsclient が作るフレームにも
+;; 同じ処理をかける。
 (add-hook 'emacs-startup-hook
           (lambda () (run-with-idle-timer 0.1 nil #'i999rri/fit-frame-height)))
+(add-hook 'after-make-frame-functions
+          (lambda (frame)
+            (run-with-idle-timer 0.1 nil #'i999rri/fit-frame-height frame)))
 
 ;;; ---------------------------------------------------------------------------
 ;;; 見た目
@@ -262,9 +275,16 @@
   (doom-modeline-height 1)
   (doom-modeline-bar-width 3)
   (doom-modeline-buffer-encoding nil)
-  ;; アイコンは Nerd Font があれば出せる。terminal では字幅の扱いが端末依存で
-  ;; 崩れることがあるため GUI のときだけ有効にする
-  (doom-modeline-icon (display-graphic-p)))
+  ;; アイコンは Nerd Font があれば出せる。
+  ;;
+  ;; ここで (display-graphic-p) を書くと、daemon 起動時に nil で固定されて
+  ;; GUI フレームでも出なくなる。フレームを作るたびに設定し直す。
+  :config
+  (defun i999rri/apply-modeline-icon (&optional frame)
+    "FRAME が GUI ならモードラインのアイコンを出す。"
+    (setq doom-modeline-icon (display-graphic-p (or frame (selected-frame)))))
+  (add-hook 'window-setup-hook #'i999rri/apply-modeline-icon)
+  (add-hook 'after-make-frame-functions #'i999rri/apply-modeline-icon))
 
 ;; nvim: vimade (フォーカスのない窓を薄くする)
 (use-package auto-dim-other-buffers
@@ -297,8 +317,11 @@
   (dashboard-show-shortcuts t)          ; 番号キーで項目を開く
   (dashboard-set-footer nil)
   (dashboard-set-navigator t)
-  (dashboard-set-heading-icons (display-graphic-p))
-  (dashboard-set-file-icons (display-graphic-p))
+  ;; アイコンは使わない。GUI かどうかで切り替えることもできるが、daemon では
+  ;; 起動時に判定できず (GUI がまだない)、フレームごとに読み直させるには
+  ;; dashboard を作り直す必要があって割に合わない。
+  (dashboard-set-heading-icons nil)
+  (dashboard-set-file-icons nil)
   (dashboard-navigation-cycle t)
   (dashboard-projects-backend 'project-el)
 

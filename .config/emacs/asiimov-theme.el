@@ -35,8 +35,14 @@
        ;; 少し明るいグレー。nvim 側で MatchParen や Pmenu の背景に使っている
        (grey-3 "#3a3a3a")
 
-       ;; terminal では背景を指定せず端末側を透かす
-       (bg-or-none (if (display-graphic-p) black 'unspecified)))
+       ;; 背景はテーマとしては常に指定する。
+       ;;
+       ;; ここで display-graphic-p を見てはいけない。テーマが読まれるのは
+       ;; 起動時の一度きりで、daemon では GUI がない状態で評価されるため、
+       ;; あとから emacsclient で開いた GUI フレームにも terminal 向けの値が
+       ;; 使われてしまう。terminal で透過させる処理は init.el 側に置き、
+       ;; フレームごとに判定している。
+       (bg-or-none black))
 
   (custom-theme-set-faces
    'asiimov
