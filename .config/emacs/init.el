@@ -24,7 +24,7 @@
 ;;   modes.nvim             -> (evil のカーソル色で代替)
 ;;   lualine                -> doom-modeline
 ;;   noice.nvim             -> vertico (ミニバッファ自体が置き換わる)
-;;   vimade                 -> auto-dim-other-buffers
+;;   vimade                 -> 入れない (GUI では画面が暗くなるのが煩わしい)
 ;;   neogen                 -> separedit + docstring は各 major-mode に任せる
 ;;   render-markdown        -> markdown-mode
 ;;   calendar.vim           -> calfw
@@ -286,22 +286,9 @@
   (add-hook 'window-setup-hook #'i999rri/apply-modeline-icon)
   (add-hook 'after-make-frame-functions #'i999rri/apply-modeline-icon))
 
-;; nvim: vimade (フォーカスのない窓を薄くする)
-(use-package auto-dim-other-buffers
-  :init (auto-dim-other-buffers-mode 1)
-  :custom (auto-dim-other-buffers-dim-on-focus-out t)
-  :config
-  ;; 既定の色は #122 で、これは #112222 のこと。背景 (#1e1e1e) と比べて赤成分
-  ;; だけが落ちるため、非アクティブになると画面が青緑がかって見える。色味を
-  ;; 持たない、背景を少し沈めただけの濃さにする。
-  ;;
-  ;; テーマ側ではなくここで設定するのは、このパッケージが遅延読み込みされ、
-  ;; テーマを適用した時点ではまだ face が存在しないため。テーマに書いても
-  ;; あとからパッケージ側の定義で上書きされてしまう。
-  (set-face-attribute 'auto-dim-other-buffers-face nil
-                      :background "#181818")
-  (set-face-attribute 'auto-dim-other-buffers-hide-face nil
-                      :background "#181818" :foreground "#181818"))
+;; nvim の vimade (フォーカスのない窓を薄くする) は入れていない。
+;; auto-dim-other-buffers を試したが、GUI で他のウィンドウに移るたびに画面が
+;; 暗くなるのが煩わしく、得られるものに見合わなかった。
 
 ;;; ---------------------------------------------------------------------------
 ;;; 起動画面 (snacks.nvim の dashboard 相当)
