@@ -1,5 +1,13 @@
 Clear-Host
 
+# Predictive IntelliSense renders a greyed-out completion to the right of the
+# cursor as you type. Dropping the source removes that suggestion while leaving
+# history recall (up-arrow, Ctrl+R) untouched. PSReadLine is absent from
+# non-interactive hosts, so guard before calling into it.
+if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) {
+    Set-PSReadLineOption -PredictionSource None
+}
+
 # Detect admin status for starship prompt symbol switching.
 # Sets exactly ONE of STARSHIP_PROMPT_ADMIN / STARSHIP_PROMPT_USER so
 # starship's env_var modules render the matching prompt with its own
