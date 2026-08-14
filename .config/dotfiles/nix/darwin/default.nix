@@ -1,6 +1,9 @@
 # nix-darwin-only system settings. Anything NixOS also understands lives in
 # nix/shared/common.nix.
 { pkgs, username, ... }:
+let
+  aquaskk = pkgs.callPackage ../pkgs/aquaskk.nix { };
+in
 {
   imports = [ ../shared/common.nix ];
 
@@ -83,6 +86,46 @@
     pkgs.raycast
     pkgs.ghostty-bin
   ];
+
+  # 入力メソッドだけは systemPackages に入れても意味がない。macOS が探すのは
+  # /Library/Input Methods だけで、Nix のプロファイルは見に行かないため。
+  #
+  # しかも symlink では駄目で、実体の bundle でなければならない。macOS の
+  # 入力メソッド登録は、ログイン時に /Library/Input Methods を走査するが、
+  # symlink や /nix/store を指す登録はそこで無視される (セキュリティ上、
+  # セッション内で動く入力メソッドは検証済みの実体しか受け付けない)。
+  # そこで store から実体をコピーする。署名は notarized のまま保たれるので
+  # Gatekeeper は通る。
+  #
+  # コピー済みかは、最後に展開した store パスをマーカーに記録して判定する。
+  # マーカーが無いのに bundle があるときは、手で入れたものと見なして壊さない。
+  # 反映にはログインし直しが要る (macOS が走査するのがそのタイミングのため)。
+  system.activationScripts.postActivation.text = ''
+    echo "installing input methods..." >&2
+    aquaskkTarget='/Library/Input Methods/AquaSKK.app'
+    aquaskkSource='${aquaskk}/Library/Input Methods/AquaSKK.app'
+    aquaskkMarker='/Library/Input Methods/.aquaskk.nix-store'
+    lsregister='/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister'
+    if [ -e "$aquaskkTarget" ] && [ ! -e "$aquaskkMarker" ]; then
+      echo "warning: $aquaskkTarget は Nix 管理外。手で消してから switch する" >&2
+    elif [ "$(cat "$aquaskkMarker" 2> /dev/null)" != "$aquaskkSource" ]; then
+      rm -rf "$aquaskkTarget"
+      cp -R "$aquaskkSource" "$aquaskkTarget"
+      chmod -R u+w "$aquaskkTarget"
+      printf '%s' "$aquaskkSource" > "$aquaskkMarker"
+      "$lsregister" -f "$aquaskkTarget" || true
+    fi
+
+    # nix-darwin は GUI アプリを /Applications/Nix Apps/ に置く。この場所は
+    # システムボリューム上なので Spotlight で index できるが、switch では
+    # 再 index が促されず、Spotlight (と、それを使う Raycast) から引けない
+    # ままになる。実体を指す /nix は別ボリュームで index 対象外のため、
+    # trampoline 側を明示的に取り込ませる。
+    if [ -d '/Applications/Nix Apps' ]; then
+      echo "indexing /Applications/Nix Apps for Spotlight..." >&2
+      /usr/bin/mdimport '/Applications/Nix Apps' || true
+    fi
+  '';
 
   # Homebrew 本体を宣言的にインストールする (flake input の nix-homebrew)。
   # これが無いと nix-darwin の homebrew.* は「brew が未導入」で activation を

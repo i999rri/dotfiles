@@ -22,6 +22,20 @@ in
 
   xdg.enable = true;
 
+  # skkeleton (nvim) 用の SKK 基礎辞書。上の方針 (設定ファイルは実体で置く)
+  # の例外として store へのリンクにする。読むだけのデータで編集対象ではなく、
+  # 4MB の実体をリポジトリに抱えたくもないため。
+  #
+  # AquaSKK には辞書を渡さない。AquaSKK は基礎辞書を自分で持って更新もする
+  # ため、ここでリンクを張ると activation のたびに取り合いになる (AquaSKK が
+  # 実体で置き直す -> home-manager が退避しようとして衝突する)。AquaSKK の
+  # 学習辞書 (~/Library/Application Support/AquaSKK/skk-jisyo.utf8) も同様に
+  # 書き込み対象なので触らない。
+  #
+  # skkeleton のユーザー辞書 (~/.skk/skkeleton-jisyo) も書き込みが要るので
+  # 管理しない。初回に自分で作る。
+  home.file.".skk/SKK-JISYO.L".source = "${pkgs.skkDictionaries.l}/share/skk/SKK-JISYO.L";
+
   # STARSHIP_CONFIG is set system-wide in nix/shared/common.nix instead of here:
   # home.sessionVariables lands in hm-session-vars.sh, which the repo's .zshrc
   # does not source (it has to stay portable to macOS and Windows).
