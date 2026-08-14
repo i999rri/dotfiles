@@ -152,6 +152,9 @@ in
   #                  GUI (Network Extension 込み) は cask にしか無い。CLI 名の
   #                  tailscale から改名されて -app が付いた
   #   windows-app    nixpkgs に無い。Microsoft Remote Desktop の後継
+  #   zen            nixpkgs に無い (macOS は DMG 配布のみ)。Firefox 系の
+  #                  ブラウザで、cask が auto_updates 対応なので自己更新とも
+  #                  衝突しない
   #
   # 既に /Applications に手で入れたものがあると brew bundle が衝突するので、
   # 初回だけ手で adopt して brew の管理下に置く (下記 setup 手順)。
@@ -163,6 +166,7 @@ in
       "1password"
       "tailscale-app"
       "windows-app"
+      "zen"
     ];
 
     onActivation = {
