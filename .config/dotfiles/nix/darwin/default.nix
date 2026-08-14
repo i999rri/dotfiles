@@ -64,8 +64,54 @@
     nix-direnv.enable = true;
   };
 
-  # Homebrew is left alone on purpose: .zshrc already sources it when present,
-  # and the casks on a Mac are GUI apps that Nix has no business managing here.
+  # Homebrew 本体を宣言的にインストールする (flake input の nix-homebrew)。
+  # これが無いと nix-darwin の homebrew.* は「brew が未導入」で activation を
+  # 止めるため、手で公式インストーラを走らせる必要があった。これで初回の
+  # switch が Homebrew の導入まで面倒を見る。
+  #
+  # enableRosetta は x86_64 の cask を Rosetta 2 経由で入れたいとき用。今の
+  # cask はどれも arm64 ネイティブ / universal なので入れていない。
+  nix-homebrew = {
+    enable = true;
+    user = username;
+  };
+
+  # nixpkgs に darwin 版の GUI が無い / あっても実用的でないアプリを、
+  # Homebrew cask で宣言的に入れる。nix-darwin は Brewfile を生成して
+  # brew bundle を走らせるだけ。Homebrew 本体の導入は上の nix-homebrew が担う。
+  #
+  #   firefox        firefox-bin は動くが、ブラウザは /Applications 直下に
+  #                  ある前提で自己更新する。cask の方が素直
+  #   1password      /Applications 直下にある前提でブラウザ拡張と system
+  #                  authentication の署名検証をする。/nix/store から動かすと
+  #                  連携が壊れるため cask
+  #   tailscale-app  nixpkgs の tailscale は CLI/daemon だけで、メニューバーの
+  #                  GUI (Network Extension 込み) は cask にしか無い。CLI 名の
+  #                  tailscale から改名されて -app が付いた
+  #   windows-app    nixpkgs に無い。Microsoft Remote Desktop の後継
+  #
+  # 既に /Applications に手で入れたものがあると brew bundle が衝突するので、
+  # 初回だけ手で adopt して brew の管理下に置く (下記 setup 手順)。
+  homebrew = {
+    enable = true;
+
+    casks = [
+      "firefox"
+      "1password"
+      "tailscale-app"
+      "windows-app"
+    ];
+
+    onActivation = {
+      # switch のたびに brew 自身と cask 一覧を更新し、古い cask は入れ替える
+      autoUpdate = true;
+      upgrade = true;
+
+      # ここに書いていない cask やアプリには触らない (勝手に消さない)。
+      # 宣言した一覧だけを厳密にするなら "uninstall" にする
+      cleanup = "none";
+    };
+  };
 
   # 「システム設定」で手を入れた項目だけを書く。macOS の初期値と同じものは
   # 書かない (書くと差分が「意思のある設定」なのか「たまたま既定値」なのか
