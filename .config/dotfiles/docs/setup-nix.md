@@ -4,6 +4,9 @@ NixOS (WSL・ベアメタル) と macOS (nix-darwin) でこのリポジトリの
 
 システムのパッケージからシェル設定まで、`switch` 一発で揃う状態になる。
 
+macOS で素直に書けなかった箇所 (入力メソッド, SKK 辞書, Touch ID, GUI アプリ,
+宣言化していない設定) の理由は [macos.md](./macos.md) にまとめてある。
+
 ## 方針
 
 このリポジトリは **bare repository として `$HOME` に直接展開する**。

@@ -22,6 +22,20 @@ in
 
   xdg.enable = true;
 
+  # skkeleton (nvim) 用の SKK 基礎辞書。上の方針 (設定ファイルは実体で置く)
+  # の例外として store へのリンクにする。読むだけのデータで編集対象ではなく、
+  # 4MB の実体をリポジトリに抱えたくもないため。
+  #
+  # AquaSKK には辞書を渡さない。AquaSKK は基礎辞書を自分で持って更新もする
+  # ため、ここでリンクを張ると activation のたびに取り合いになる (AquaSKK が
+  # 実体で置き直す -> home-manager が退避しようとして衝突する)。AquaSKK の
+  # 学習辞書 (~/Library/Application Support/AquaSKK/skk-jisyo.utf8) も同様に
+  # 書き込み対象なので触らない。
+  #
+  # skkeleton のユーザー辞書 (~/.skk/skkeleton-jisyo) も書き込みが要るので
+  # 管理しない。初回に自分で作る。
+  home.file.".skk/SKK-JISYO.L".source = "${pkgs.skkDictionaries.l}/share/skk/SKK-JISYO.L";
+
   # STARSHIP_CONFIG is set system-wide in nix/shared/common.nix instead of here:
   # home.sessionVariables lands in hm-session-vars.sh, which the repo's .zshrc
   # does not source (it has to stay portable to macOS and Windows).
@@ -69,17 +83,17 @@ in
   # リポジトリの内容としては追跡されない。
   programs.git = {
     enable = true;
-    userName = "i999rri";
 
-    # このリポジトリは public。実アドレスを平文で置くとファイル内容として
-    # 拾われるため、公開前提の noreply を使う。GitHub 上では同じアカウントに
-    # 紐づく
-    userEmail = "68542115+i999rri@users.noreply.github.com";
+    # userName / userEmail / extraConfig は home-manager 26.05 で settings に
+    # 統合された。git の設定名がそのままキーになる
+    settings = {
+      user.name = "i999rri";
 
-    # cli.nix で入れている delta を diff の表示に使う
-    delta.enable = true;
+      # このリポジトリは public。実アドレスを平文で置くとファイル内容として
+      # 拾われるため、公開前提の noreply を使う。GitHub 上では同じアカウントに
+      # 紐づく
+      user.email = "68542115+i999rri@users.noreply.github.com";
 
-    extraConfig = {
       init.defaultBranch = "main";
 
       # 意図しないマージコミットを作らない
@@ -91,6 +105,13 @@ in
       # gh auth login で SSH を選んでいるため、HTTPS の URL でも SSH に寄せる
       url."git@github.com:".insteadOf = "https://github.com/";
     };
+  };
+
+  # cli.nix で入れている delta を diff の表示に使う。programs.git.delta から
+  # 独立したオプションになり、git への配線も明示するようになった
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
   };
 
   programs.home-manager.enable = true;
