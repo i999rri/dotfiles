@@ -57,12 +57,17 @@ is_root() { [ "$(id -u)" -eq 0 ]; }
 
 # root ならそのまま、一般ユーザーなら sudo 経由で実行する。
 # nixos-rebuild は --extra-experimental-features を受け付けないため NIX_CONFIG で
-# 渡すが、sudo は環境変数を落とすので明示的に引き継ぐ
+# 渡すが、sudo は環境変数を落とすので明示的に引き継ぐ。
+#
+# -H で HOME を root のものにする。macOS の sudoers は既定で HOME を残すため、
+# これが無いと darwin-rebuild が呼ぶ nix が「$HOME が自分の所有でない」と警告を
+# 出し、あなたの ~/.cache などに root 所有のファイルを作りかける (Nix はそれを
+# 避けて /var/root にフォールバックするが、警告が出るのは紛らわしい)。
 as_root() {
     if is_root; then
         env NIX_CONFIG="$NIX_CONFIG" "$@"
     else
-        sudo NIX_CONFIG="$NIX_CONFIG" "$@"
+        sudo -H NIX_CONFIG="$NIX_CONFIG" "$@"
     fi
 }
 
