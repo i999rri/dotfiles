@@ -180,18 +180,31 @@ in
   # 書かない (書くと差分が「意思のある設定」なのか「たまたま既定値」なのか
   # 区別できなくなるため)。適用先は system.primaryUser のアカウント。
   #
-  # 消して switch すると、手で変える前の値ではなく OS の初期値に戻る。
+  # nix-darwin は書いた項目に defaults write を撃つだけで、消した項目に
+  # defaults delete は撃たない。つまりここから項目を消しても、一度反映した
+  # マシンでは値が残る (新しいマシンでは書かれないので初期値になる)。既に
+  # 書いてしまった値を戻すには、手で defaults delete する必要がある。
   system.defaults = {
     NSGlobalDomain = {
       AppleInterfaceStyle = "Dark";
 
-      # ナチュラルスクロールを切る (指の向き = コンテンツの向き、ではなく
-      # 指の向き = スクロールバーの向き)
+      # ナチュラルスクロールを切る (false = 従来向き。指を下ろすと中身も下)。
+      # macOS の既定は true なので、明示的に書いておかないと既定に戻る
       "com.apple.swipescrolldirection" = false;
+
+      # トラックパッドの軌跡の速さ。0〜3 で、3 が一番速い
+      "com.apple.trackpad.scaling" = 3.0;
 
       # キーリピートを最速に。nvim でのカーソル移動が効いてくる
       InitialKeyRepeat = 15;
       KeyRepeat = 2;
+
+      # 入力に勝手に手を入れる機能を全部止める。特にスマート引用符は、
+      # コードやコマンドを書くときに " を “ ” に化けさせて壊す
+      NSAutomaticSpellingCorrectionEnabled = false;
+      NSAutomaticQuoteSubstitutionEnabled = false;
+      NSAutomaticDashSubstitutionEnabled = false;
+      NSAutomaticCapitalizationEnabled = false;
     };
 
     dock = {
@@ -199,6 +212,23 @@ in
       orientation = "left";
       tilesize = 22;
       magnification = false;
+
+      # Dock に並べるものを固定する。ここに書いたものが並び順そのものになり、
+      # 初期状態で入っている Mail や Music などは消える (Finder とゴミ箱は
+      # Dock の両端に固定されているものなので、この一覧の管轄外)。
+      #
+      # Ghostty は Nix で入れているため /Applications/Nix Apps/ に置かれる。
+      # 中身は /nix/store を指すが、この trampoline のパス自体は世代をまたいで
+      # 変わらないので Dock から直に指してよい。Spotlight は /nix を index
+      # しないので Raycast や Spotlight からは引けず、Dock に置くのが手軽。
+      # 残りは Nix の管理外で入れたアプリで、こちらもパスを直に書いている。
+      persistent-apps = [
+        "/Applications/Firefox.app"
+        "/Applications/Nix Apps/Ghostty.app"
+        "/Applications/1Password.app"
+        "/Applications/Tailscale.app"
+        "/Applications/Windows App.app"
+      ];
     };
 
     # 時計は「曜日 + 12時間表記」。日付は出さない (0 = 表示しない)
@@ -206,6 +236,40 @@ in
       ShowAMPM = true;
       ShowDate = 0;
       ShowDayOfWeek = true;
+    };
+
+    # キーボードショートカット。nix-darwin に専用のオプションが無いので
+    # plist を直に書く。
+    #
+    # parameters は (文字の ASCII コード, キーコード, 修飾キーのビットマスク)。
+    # 65535 は「文字なし」を表す。値はどれも システム設定 で実際に割り当てて
+    # macOS 自身に書かせたものを写しているので、配列の解釈で外すことがない。
+    CustomUserPreferences."com.apple.symbolichotkeys".AppleSymbolicHotKeys = {
+      # 前の入力ソースを選択: ⌃Space -> ⌘`
+      # 96 = `、50 = ` のキーコード、1048576 = Command
+      "60" = {
+        enabled = 1;
+        value = {
+          parameters = [
+            96
+            50
+            1048576
+          ];
+          type = "standard";
+        };
+      };
+
+      # 入力ソースが 2 つしかないので「次の入力ソース」(⌥⌃Space) は要らない
+      "61".enabled = 0;
+
+      # 「次のウインドウを操作対象にする」の既定が ⌘` で、上と衝突する。
+      # この辞書は defaults write で丸ごと置換されるため、ここに書かないと
+      # 既定値が復活してぶつかる
+      "27".enabled = 0;
+
+      # Spotlight (⌘Space) を外して、同じキーを Raycast に渡す。
+      # 止まるのはショートカットだけで、検索インデックス自体は動いたまま
+      "64".enabled = 0;
     };
 
     # デスクトップに置いたものを表示しない。壁紙だけの状態にする
