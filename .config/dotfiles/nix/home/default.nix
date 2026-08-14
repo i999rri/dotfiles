@@ -83,17 +83,17 @@ in
   # リポジトリの内容としては追跡されない。
   programs.git = {
     enable = true;
-    userName = "i999rri";
 
-    # このリポジトリは public。実アドレスを平文で置くとファイル内容として
-    # 拾われるため、公開前提の noreply を使う。GitHub 上では同じアカウントに
-    # 紐づく
-    userEmail = "68542115+i999rri@users.noreply.github.com";
+    # userName / userEmail / extraConfig は home-manager 26.05 で settings に
+    # 統合された。git の設定名がそのままキーになる
+    settings = {
+      user.name = "i999rri";
 
-    # cli.nix で入れている delta を diff の表示に使う
-    delta.enable = true;
+      # このリポジトリは public。実アドレスを平文で置くとファイル内容として
+      # 拾われるため、公開前提の noreply を使う。GitHub 上では同じアカウントに
+      # 紐づく
+      user.email = "68542115+i999rri@users.noreply.github.com";
 
-    extraConfig = {
       init.defaultBranch = "main";
 
       # 意図しないマージコミットを作らない
@@ -105,6 +105,13 @@ in
       # gh auth login で SSH を選んでいるため、HTTPS の URL でも SSH に寄せる
       url."git@github.com:".insteadOf = "https://github.com/";
     };
+  };
+
+  # cli.nix で入れている delta を diff の表示に使う。programs.git.delta から
+  # 独立したオプションになり、git への配線も明示するようになった
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
   };
 
   programs.home-manager.enable = true;
