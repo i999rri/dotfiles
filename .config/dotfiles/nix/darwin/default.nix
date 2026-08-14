@@ -64,6 +64,26 @@
     nix-direnv.enable = true;
   };
 
+  # macOS の GUI アプリのうち、nixpkgs で素直に動くもの (ランチャーと
+  # ターミナル) は nix で、そうでないもの (下記 Homebrew の項) は cask で
+  # 管理する。Homebrew 本体は入れない。
+
+  # macOS 専用の GUI アプリはここで管理する。nix/shared/packages.nix には
+  # 入れない。あちらは OS を問わない CLI 環境の一覧で、GUI アプリが混ざる
+  # 場所ではない。いずれも .app を持つパッケージで、switch すると
+  # /Applications/Nix Apps/ 以下にリンクされる。
+  #
+  #   raycast      Spotlight の代わりに使うランチャー。OS のキーバインドを
+  #                置き換える立ち位置にあるため、方針の例外として管理する
+  #   ghostty-bin  常用しているターミナル。設定は .config/ghostty/config に
+  #                あり、この環境の前提になっている。darwin では公式の
+  #                ビルド済みバイナリ (ghostty-bin) を使う。ソースの ghostty
+  #                は nixpkgs では Linux 専用
+  environment.systemPackages = [
+    pkgs.raycast
+    pkgs.ghostty-bin
+  ];
+
   # Homebrew 本体を宣言的にインストールする (flake input の nix-homebrew)。
   # これが無いと nix-darwin の homebrew.* は「brew が未導入」で activation を
   # 止めるため、手で公式インストーラを走らせる必要があった。これで初回の
