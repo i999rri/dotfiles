@@ -59,3 +59,11 @@ function global:prompt {
     }
     & $global:_starshipPrompt
 }
+
+# Open files in the running Emacs frame, routed to the tab of their project by
+# init.el. With no arguments, open the current directory. -a '' starts the
+# daemon first when no server is listening.
+function e {
+    $targets = if ($args.Count) { $args } else { '.' }
+    emacsclientw -r -n -a '' @targets
+}
