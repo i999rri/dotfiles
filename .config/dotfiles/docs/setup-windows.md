@@ -151,6 +151,20 @@ terminal で使いたい場合は WSL 側に Emacs を入れる。dotfiles は `
 
 構成は nvim 側と揃えてある (`.config/emacs/init.el` の冒頭に対応表がある)。キーバインドは Emacs の標準のままで、vim 化はしていない。
 
+#### どこから開いても 1 つの窓にまとめる
+
+スタートメニュー・Explorer の右クリック・「プログラムから開く」を `emacsclientw -r` 経由にする。管理者権限は要らない。
+
+```powershell
+& "$HOME\source\repos\dotfiles\.config\dotfiles\windows\emacs-client.ps1"
+```
+
+`scoop update emacs` でショートカットが既定 (`-c` で毎回新しい窓を作る) に戻るため、更新したら再実行する。タスクバーのピン留めも、開いている窓から付け直すと `emacs.exe` を直接起動するものになるため、付け直したら再実行する。
+
+ターミナルからは pwsh プロファイルの `e` を使う (`e .` や `e file.txt`)。開いたファイルはプロジェクトごとのタブに振り分けられる (`init.el` の `server-window`)。
+
+Windows 11 の右クリックメニューでは「その他のオプションを確認」の中に出る。拡張子の既定アプリにしたい場合は、「プログラムから開く」→「Emacs」→「常に使う」を手で選ぶ。
+
 ### 11. 確認
 
 新しい pwsh タブを開いて以下が表示されれば成功:
