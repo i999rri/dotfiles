@@ -893,6 +893,52 @@
 (unless (or (daemonp) (server-running-p))
   (server-start))
 
+(defun i999rri/buffer-project-root (buffer)
+  "BUFFER が属するプロジェクトのルート。裏方かプロジェクトの外なら nil。"
+  ;; 先頭が空白のものはミニバッファなどの内部用で、* と同じく裏方として扱う
+  (unless (string-match-p "\\`[ *]" (buffer-name buffer))
+    (with-current-buffer buffer
+      (when-let* ((p (project-current nil)))
+        (project-root p)))))
+
+;; タブがどのプロジェクトのものかは、タブ自身に覚えさせる。表示中のバッファから
+;; 毎回求めると、*eat* や *Messages* を覗いている間だけプロジェクトから外れて
+;; しまう。タブに足した独自の値は、tab-bar が切り替えのたびに引き継ぐ。
+(defun i999rri/tab-remember-project (frame)
+  "FRAME の選択中のタブに、いま見ているプロジェクトを覚えさせる。"
+  (when-let* ((window (frame-selected-window frame))
+              ((not (window-minibuffer-p window)))
+              (root (i999rri/buffer-project-root (window-buffer window))))
+    (setf (alist-get 'i999rri-project (cdr (tab-bar--current-tab-find nil frame)))
+          root)))
+
+;; バッファを替えたときと、分割した窓の間を移ったとき
+(add-hook 'window-buffer-change-functions #'i999rri/tab-remember-project)
+(add-hook 'window-selection-change-functions #'i999rri/tab-remember-project)
+
+(defun i999rri/server-display-in-project-tab (buffer)
+  "BUFFER を、同じプロジェクトを開いているタブに出す。無ければタブを作る。"
+  (when-let* ((root (i999rri/buffer-project-root buffer)))
+    (let ((index (seq-position (funcall tab-bar-tabs-function) root
+                               (lambda (tab root)
+                                 (when-let* ((r (alist-get 'i999rri-project tab)))
+                                   (file-equal-p r root))))))
+      (cond (index
+             (tab-bar-select-tab (1+ index)))
+            ;; 起動直後の dashboard しか無いタブは、新しく作らずそのまま使う
+            ((not (seq-every-p (lambda (w)
+                                 (eq (buffer-local-value 'major-mode (window-buffer w))
+                                     'dashboard-mode))
+                               (window-list nil 'no-minibuf)))
+             (tab-bar-new-tab)))))
+  (switch-to-buffer buffer)
+  ;; フックは再描画まで走らないため、続けて開いたときに備えてここでも覚えさせる
+  (i999rri/tab-remember-project (selected-frame))
+  ;; 他のアプリの後ろに隠れていても前に出す
+  (select-frame-set-input-focus (selected-frame)))
+
+(setq server-window #'i999rri/server-display-in-project-tab)
+
 ;;; ---------------------------------------------------------------------------
 ;;; 後始末
 ;;; ---------------------------------------------------------------------------
