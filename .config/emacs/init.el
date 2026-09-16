@@ -893,6 +893,16 @@
 (unless (or (daemonp) (server-running-p))
   (server-start))
 
+;;; ---------------------------------------------------------------------------
+;;; プロジェクトのタブへの振り分け
+;;; ---------------------------------------------------------------------------
+
+;; バッファは、それが属するプロジェクトのタブに表示する。C-x C-f・C-x b・dired・
+;; xref のジャンプ・emacsclient と、開き方によらず同じ規則にする。
+;;
+;; 表示先を決める共通の口である display-buffer-alist に入れている。コマンドごとに
+;; 手を入れると、対象から漏れたものだけ規則が崩れる。
+
 (defun i999rri/buffer-project-root (buffer)
   "BUFFER が属するプロジェクトのルート。裏方かプロジェクトの外なら nil。"
   ;; 先頭が空白のものはミニバッファなどの内部用で、* と同じく裏方として扱う
@@ -904,40 +914,71 @@
 ;; タブがどのプロジェクトのものかは、タブ自身に覚えさせる。表示中のバッファから
 ;; 毎回求めると、*eat* や *Messages* を覗いている間だけプロジェクトから外れて
 ;; しまう。タブに足した独自の値は、tab-bar が切り替えのたびに引き継ぐ。
+(defun i999rri/tab-project ()
+  "選択中のタブが覚えているプロジェクトのルート。"
+  (alist-get 'i999rri-project (cdr (tab-bar--current-tab-find))))
+
+(defun i999rri/tab-set-project (root &optional frame)
+  "FRAME の選択中のタブに、ROOT のプロジェクトを覚えさせる。"
+  (setf (alist-get 'i999rri-project (cdr (tab-bar--current-tab-find nil frame)))
+        root))
+
 (defun i999rri/tab-remember-project (frame)
   "FRAME の選択中のタブに、いま見ているプロジェクトを覚えさせる。"
   (when-let* ((window (frame-selected-window frame))
               ((not (window-minibuffer-p window)))
               (root (i999rri/buffer-project-root (window-buffer window))))
-    (setf (alist-get 'i999rri-project (cdr (tab-bar--current-tab-find nil frame)))
-          root)))
+    (i999rri/tab-set-project root frame)))
 
 ;; バッファを替えたときと、分割した窓の間を移ったとき
 (add-hook 'window-buffer-change-functions #'i999rri/tab-remember-project)
 (add-hook 'window-selection-change-functions #'i999rri/tab-remember-project)
 
-(defun i999rri/server-display-in-project-tab (buffer)
-  "BUFFER を、同じプロジェクトを開いているタブに出す。無ければタブを作る。"
-  (when-let* ((root (i999rri/buffer-project-root buffer)))
-    (let ((index (seq-position (funcall tab-bar-tabs-function) root
-                               (lambda (tab root)
-                                 (when-let* ((r (alist-get 'i999rri-project tab)))
-                                   (file-equal-p r root))))))
-      (cond (index
-             (tab-bar-select-tab (1+ index)))
-            ;; 起動直後の dashboard しか無いタブは、新しく作らずそのまま使う
-            ((not (seq-every-p (lambda (w)
-                                 (eq (buffer-local-value 'major-mode (window-buffer w))
-                                     'dashboard-mode))
-                               (window-list nil 'no-minibuf)))
-             (tab-bar-new-tab)))))
-  (switch-to-buffer buffer)
-  ;; フックは再描画まで走らないため、続けて開いたときに備えてここでも覚えさせる
-  (i999rri/tab-remember-project (selected-frame))
-  ;; 他のアプリの後ろに隠れていても前に出す
-  (select-frame-set-input-focus (selected-frame)))
+(defun i999rri/select-project-tab (root)
+  "ROOT のプロジェクトを覚えているタブへ移る。無ければタブを作る。"
+  (let ((index (seq-position (funcall tab-bar-tabs-function) root
+                             (lambda (tab root)
+                               (when-let* ((r (alist-get 'i999rri-project tab)))
+                                 (file-equal-p r root)))))
+        (dashboard-only (seq-every-p
+                         (lambda (w)
+                           (eq (buffer-local-value 'major-mode (window-buffer w))
+                               'dashboard-mode))
+                         (window-list nil 'no-minibuf))))
+    (cond (index
+           (tab-bar-select-tab (1+ index)))
+          ;; 起動直後や C-x t 2 で作った、dashboard しか無いタブはそのまま使う
+          ((not dashboard-only)
+           (tab-bar-new-tab))))
+  ;; 移った先で覚えさせるのはフックに任せず、ここで済ませる。フックは再描画まで
+  ;; 走らないため、1 つのコマンドの中で同じプロジェクトを続けて表示すると、
+  ;; 覚える前のタブが見つからずにタブをもう 1 つ作ってしまう
+  (i999rri/tab-set-project root))
 
-(setq server-window #'i999rri/server-display-in-project-tab)
+(defun i999rri/other-project-buffer-p (buffer-or-name &rest _)
+  "BUFFER-OR-NAME が、選択中のタブとは別のプロジェクトに属していれば non-nil。"
+  ;; consult は候補を選んでいる間もバッファを表示して見せる。そこで振り分けると、
+  ;; 候補を送るたびにタブが切り替わる。ミニバッファを抜けた後の表示だけを扱う
+  (and (not (active-minibuffer-window))
+       (when-let* ((buffer (get-buffer buffer-or-name))
+                   (root (i999rri/buffer-project-root buffer)))
+         (not (and (i999rri/tab-project)
+                   (file-equal-p (i999rri/tab-project) root))))))
+
+(defun i999rri/display-buffer-in-project-tab (buffer _alist)
+  "BUFFER のプロジェクトのタブへ移る。表示そのものは行わず nil を返す。"
+  ;; nil を返すと、display-buffer は続けて呼び出し元が指定した出し方を試す。
+  ;; 移った先のタブで、同じ窓か別の窓かという元の指定どおりに表示される
+  (i999rri/select-project-tab (i999rri/buffer-project-root buffer))
+  nil)
+
+(add-to-list 'display-buffer-alist
+             '(i999rri/other-project-buffer-p
+               (i999rri/display-buffer-in-project-tab)))
+
+;; C-x C-f や C-x b が使う switch-to-buffer は、既定では display-buffer-alist を
+;; 見ずに今の窓へ直接表示する。emacsclient から開いたときもここを通る
+(setq switch-to-buffer-obey-display-actions t)
 
 ;;; ---------------------------------------------------------------------------
 ;;; 後始末
