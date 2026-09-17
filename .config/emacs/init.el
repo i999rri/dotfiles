@@ -903,6 +903,58 @@
   (tab-bar-mode 1))
 
 ;;; ---------------------------------------------------------------------------
+;;; ファイルのタブ (centaur-tabs)
+;;; ---------------------------------------------------------------------------
+
+;; 上の tab-bar がプロジェクトを並べ、その下の段にいま見ているプロジェクトの
+;; バッファを並べる。Visual Studio のドキュメントタブのように、マウスで切り替えたり
+;; 閉じたりできる。
+;;
+;; 描く場所は各窓の tab-line で、header-line は使わない。
+
+(defun i999rri/centaur-tabs-group ()
+  "今のバッファを並べるタブの組。プロジェクトのタブへの振り分けと同じ基準で分ける。"
+  ;; 基準を振り分けと揃えるため、centaur-tabs 既定の分け方は使わない。既定では
+  ;; *eat* のような裏方もプロジェクト名で束ねるが、振り分けはそれを今のタブに
+  ;; 残すので、並ぶタブと居るタブの所属が食い違う。
+  (list (or (i999rri/buffer-project-root (current-buffer))
+            (if (string-match-p "\\`[ *]" (buffer-name)) "Emacs" "Other"))))
+
+(use-package centaur-tabs
+  ;; :bind だけだとキーを押すまで読み込まれず、:config のモードも有効にならない
+  :demand t
+  :custom
+  (centaur-tabs-style "bar")
+  (centaur-tabs-height 32)              ; 15pt の 1 文字 (26px) に上下の余白を足す
+  (centaur-tabs-set-icons t)
+  (centaur-tabs-icon-type 'nerd-icons)  ; doom-modeline と同じアイコン
+  ;; 選択中のタブは下線で示す。上の tab-bar と同じ示し方に揃える
+  (centaur-tabs-set-bar 'under)
+  (centaur-tabs-set-modified-marker t)
+  (centaur-tabs-modified-marker "●")
+  (centaur-tabs-show-new-tab-button nil)
+  ;; 切り替えは今のプロジェクトの中だけで回す。別のプロジェクトへは tab-bar で移る
+  (centaur-tabs-cycle-scope 'tabs)
+  ;; dashboard にはタブを出さない。起動直後の画面に中身の無い帯が載るだけになる。
+  ;; 残りは centaur-tabs の既定値で、読み込み時に一度だけ使われるため先に決めておく
+  (centaur-tabs-hide-tabs-hooks '(magit-status-mode-hook
+                                  magit-popup-mode-hook
+                                  reb-mode-hook
+                                  completion-list-mode-hook
+                                  dashboard-mode-hook))
+  :init
+  ;; 下線をフォントのベースラインではなく、行の下端 (descent) に引く。
+  ;; centaur-tabs の README が、選択中を下線で示すときはこれが必要だとしている。
+  ;; 全体の設定なので、リンクや tab-bar の下線も同じ位置に下がる
+  (setq x-underline-at-descent-line t)
+  :bind (("C-<prior>" . centaur-tabs-backward)   ; Ctrl+PageUp
+         ("C-<next>"  . centaur-tabs-forward))   ; Ctrl+PageDown
+  :config
+  ;; 組分けの関数は defcustom ではなく defvar なので、:custom では入らない
+  (setq centaur-tabs-buffer-groups-function #'i999rri/centaur-tabs-group)
+  (centaur-tabs-mode 1))
+
+;;; ---------------------------------------------------------------------------
 ;;; サーバー (どこから開いても 1 つのフレームに集める)
 ;;; ---------------------------------------------------------------------------
 
