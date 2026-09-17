@@ -108,11 +108,6 @@
    `(mode-line-inactive ((t (:foreground ,grey  :background ,dark-grey))))
    `(mode-line-buffer-id ((t (:weight bold))))
 
-   ;; タブ (nvim の TabLine)
-   `(tab-bar          ((t (:foreground ,grey  :background ,dark-grey))))
-   `(tab-bar-tab      ((t (:foreground ,black :background ,orange))))
-   `(tab-bar-tab-inactive ((t (:foreground ,grey :background ,dark-grey))))
-
    ;; 補完のポップアップ (nvim の Pmenu)
    `(corfu-default    ((t (:foreground ,fg    :background ,dark-grey))))
    `(corfu-current    ((t (:foreground ,black :background ,orange))))
