@@ -1105,8 +1105,13 @@
 (use-package tab-bar
   :ensure nil
   :custom
-  ;; タブが 1 つでも帯を出す。隠すと、今いるタブも機能が入っていることも見えない
-  (tab-bar-show t)
+  ;; 帯は隠す。下の段のファイルのタブと合わせると、画面の上端が 2 段のタブで
+  ;; 埋まる。どのプロジェクトがあるかは、切り替えるときに見えれば足りる。
+  ;;
+  ;; タブ自体はプロジェクトの作業空間として残り、振り分けも動く。切り替えは
+  ;; 何でも検索 (C-c SPC の p) から行う。見た目の設定 (テーマの face、アイコン、
+  ;; 閉じるボタン、アクセントの線) は、t に戻せば帯がそのまま出るよう残してある
+  (tab-bar-show nil)
   (tab-bar-tab-hints t)               ; 番号を振る
   ;; タブの間隔はテーマの枠 (左右 10px の余白) で取るため、区切りの文字は置かない
   (tab-bar-separator "")
@@ -1129,8 +1134,6 @@
   (tab-bar-new-tab-choice #'i999rri/tab-new-buffer)
   (tab-bar-select-restore-windows #'i999rri/tab-restore-killed-windows)
   (tab-bar-tab-name-function #'i999rri/tab-name)
-  :bind (("C-<tab>"   . tab-next)
-         ("C-S-<tab>" . tab-previous))
   :init
   (add-hook 'tab-bar-mode-hook #'i999rri/tab-bar-close-button-text)
   (tab-bar-mode 1))
@@ -1206,7 +1209,13 @@
   ;; タブの段の下のアクセントの線が、文字の下ではなく段の下端に来る。
   ;; 全体の設定なので、リンクなどの下線も同じ位置に下がる
   (setq x-underline-at-descent-line t)
-  :bind (("C-<prior>" . centaur-tabs-backward)   ; Ctrl+PageUp
+  ;; Ctrl+Tab はプロジェクトの中で開いているファイルのタブを回す。上の段のプロジェクト
+  ;; のタブは帯ごと隠しているため、そちらには割り当てない。tab-bar-mode は C-<tab> が
+  ;; 空いているときだけ tab-next を置くので、ここで割り当てれば上書きされない。
+  ;; magit の画面では magit 自身の C-<tab> (セクションの開閉) が優先される
+  :bind (("C-<tab>"   . centaur-tabs-forward)
+         ("C-S-<tab>" . centaur-tabs-backward)
+         ("C-<prior>" . centaur-tabs-backward)   ; Ctrl+PageUp
          ("C-<next>"  . centaur-tabs-forward))   ; Ctrl+PageDown
   :config
   ;; 組分けの関数は defcustom ではなく defvar なので、:custom では入らない
