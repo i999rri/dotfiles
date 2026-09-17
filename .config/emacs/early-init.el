@@ -63,7 +63,13 @@
 ;; 近いものとして背景自体を半透明にし、後ろの壁紙を透かす。
 ;;
 ;; alpha ではなく alpha-background を使うのは、前者だと文字まで透けるため。
-(push '(alpha-background . 85) default-frame-alist)
+;;
+;; ただし Windows 版は alpha-background を受け付けても描画に反映せず、背景は
+;; 不透明のままになる。Windows では文字ごと透ける alpha で代える。文字が薄く
+;; なりすぎないよう、alpha-background より不透明寄りの値にしている。
+(if (eq system-type 'windows-nt)
+    (push '(alpha . 90) default-frame-alist)
+  (push '(alpha-background . 85) default-frame-alist))
 
 (setq menu-bar-mode nil
       tool-bar-mode nil
