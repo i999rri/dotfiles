@@ -466,6 +466,29 @@
   :init (vertico-mode 1)
   :custom (vertico-cycle t))
 
+;; 入力欄を画面の下ではなく、編集画面の上の方の真ん中に浮かべる。JetBrains の
+;; Search Everywhere のように、何かを探すときは視線の先に入力欄が出る。
+;;
+;; 入力欄を丸ごと子フレームに移すため、vertico の候補だけでなく、read-string や
+;; yes-or-no-p の問いも浮かぶ。M-: (eval-expression) だけは既定どおり下に残す。
+;; 子フレームにはモードラインが無く、引数のヒント (eldoc) を出す場所が無いため。
+;; 浮かぶ入力欄が壊れたときも、M-: で (mini-frame-mode -1) を評価して切れる。
+(use-package mini-frame
+  ;; :custom だけだと読み込みが遅れ、モードが有効にならない
+  :demand t
+  :custom
+  ;; 不透明にする。子フレームも default-frame-alist の alpha (Windows では 90) を
+  ;; 受け継ぎ、後ろの編集画面の文字が候補に重なって読めなくなる
+  (mini-frame-show-parameters '((top . 0.2)
+                                (left . 0.5)
+                                (width . 0.6)
+                                (alpha . 100)))
+  ;; 背景は編集画面の色を文字色の方へ 12 ずらした #2a2a2a にする。hl-line と
+  ;; 同じ灰色で、編集画面から一段浮いて見える。既定の 27 では明るすぎる
+  (mini-frame-color-shift-step 12)
+  :config
+  (mini-frame-mode 1))
+
 (use-package orderless
   :custom
   (completion-styles '(orderless basic))
