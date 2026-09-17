@@ -626,16 +626,40 @@
                     (project-known-project-roots))
             #'file-equal-p))
 
+(defun i999rri/project-tab-number (root &optional frame)
+  "FRAME で ROOT のプロジェクトを覚えているタブの番号 (1 始まり)。無ければ nil。"
+  (when-let* ((index (seq-position (funcall tab-bar-tabs-function frame) root
+                                   (lambda (tab root)
+                                     (when-let* ((r (alist-get 'i999rri-project tab)))
+                                       (file-equal-p r root))))))
+    (1+ index)))
+
 (defun i999rri/search-everywhere--open-project (root)
   "ROOT のプロジェクトのタブへ移る。タブが無ければ ROOT を開いてタブを作らせる。"
-  (if-let* ((index (seq-position (funcall tab-bar-tabs-function) root
-                                 (lambda (tab root)
-                                   (when-let* ((r (alist-get 'i999rri-project tab)))
-                                     (file-equal-p r root))))))
+  (if-let* ((number (i999rri/project-tab-number root)))
       ;; タブがあれば、そこで開いているものはそのままにして移るだけにする
-      (tab-bar-select-tab (1+ index))
+      (tab-bar-select-tab number)
     ;; 表示先のタブはプロジェクトのタブへの振り分けが決める
     (dired root)))
+
+(defun i999rri/search-everywhere--project-preview ()
+  "プロジェクトの候補の上に来たら、後ろの画面をそのタブに仮で切り替える状態関数を作る。"
+  ;; consult は入力欄を開く前にこれを呼ぶ。本体のフレームと元のタブはここで覚える。
+  ;; 入力欄が浮いている間は選択中のフレームが入力欄の子フレームになるため、
+  ;; タブは本体のフレームを指定して切り替える
+  (let* ((frame (selected-frame))
+         (origin (1+ (tab-bar--current-tab-index nil frame)))
+         (select (lambda (number)
+                   (with-selected-frame frame
+                     (unless (= number (1+ (tab-bar--current-tab-index)))
+                       (tab-bar-select-tab number))))))
+    (lambda (action root)
+      (pcase action
+        ;; 開いていないプロジェクトや、ほかの種類の候補の上 (ROOT が nil) では元に戻す
+        ('preview (funcall select (or (and root (i999rri/project-tab-number root frame))
+                                      origin)))
+        ;; 選んだ場合も一度元に戻す。確定は入力欄を閉じた後の :action で行う
+        ('exit (funcall select origin))))))
 
 (defun i999rri/search-everywhere--commands ()
   "M-x で呼べるコマンドの名前の一覧。"
@@ -668,8 +692,17 @@
            (append '(:name "Recent File" :narrow ?r) consult-source-recent-file)
            `( :name "Project" :narrow ?p :face consult-file
               :items ,(lambda ()
-                        (mapcar (lambda (r) (cons (abbreviate-file-name r) r))
-                                (i999rri/search-everywhere--project-roots)))
+                        (let ((current (alist-get 'i999rri-project
+                                                  (cdr (tab-bar--current-tab-find)))))
+                          (mapcar (lambda (r)
+                                    ;; 今いるプロジェクトに印を付ける
+                                    (cons (concat (if (and current (file-equal-p r current))
+                                                      "● "
+                                                    "  ")
+                                                  (abbreviate-file-name r))
+                                          r))
+                                  (i999rri/search-everywhere--project-roots))))
+              :state ,#'i999rri/search-everywhere--project-preview
               :action ,#'i999rri/search-everywhere--open-project)
            `( :name "Command" :narrow ?a :category command
               :items ,#'i999rri/search-everywhere--commands
