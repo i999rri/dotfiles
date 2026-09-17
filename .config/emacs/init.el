@@ -925,13 +925,24 @@
 ;; 表示先を決める共通の口である display-buffer-alist に入れている。コマンドごとに
 ;; 手を入れると、対象から漏れたものだけ規則が崩れる。
 
+;; プロジェクトの判定結果は、バッファごとに作業ディレクトリと組にして覚えておく。
+;; centaur-tabs はタブを描き直すたびに全バッファの所属を問い合わせる。
+;; project-current はプロジェクトの外だと根まで遡って 3ms 近くかかり、負の結果を
+;; 覚えないため、開いているファイルの数だけ描画が遅くなる。
+(defvar-local i999rri--project-root-cache nil
+  "(default-directory . プロジェクトのルート) の組。")
+
 (defun i999rri/buffer-project-root (buffer)
   "BUFFER が属するプロジェクトのルート。裏方かプロジェクトの外なら nil。"
   ;; 先頭が空白のものはミニバッファなどの内部用で、* と同じく裏方として扱う
   (unless (string-match-p "\\`[ *]" (buffer-name buffer))
     (with-current-buffer buffer
-      (when-let* ((p (project-current nil)))
-        (project-root p)))))
+      (if (equal (car i999rri--project-root-cache) default-directory)
+          (cdr i999rri--project-root-cache)
+        (let ((root (when-let* ((p (project-current nil)))
+                      (project-root p))))
+          (setq i999rri--project-root-cache (cons default-directory root))
+          root)))))
 
 ;; タブがどのプロジェクトのものかは、タブ自身に覚えさせる。表示中のバッファから
 ;; 毎回求めると、*eat* や *Messages* を覗いている間だけプロジェクトから外れて
