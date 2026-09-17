@@ -57,41 +57,48 @@
    `(vertical-border  ((t (:foreground ,dark-grey))))
    `(fill-column-indicator ((t (:foreground ,dark-grey))))
 
-   ;; タブ (tab-bar)
+   ;; タブ (tab-bar と、その下の段の centaur-tabs)
    ;;
-   ;; 帯の背景を編集領域と揃えて境目を作らない。今いるタブはオレンジの文字と下線で
-   ;; 示す。ベタ塗りにしないのは、画面の上端に強い色面があると視線がそこで止まり、
-   ;; 本文へ戻るのに一拍かかるため。
+   ;; Visual Studio (2019 まで) のドキュメントタブの形にする。選択中のタブはオレンジで
+   ;; 塗って黒い文字にし、段の下にオレンジの線を横いっぱいに引く。塗ったタブと編集画面が
+   ;; この線でつながり、どのタブを見ているかが形で分かる。
    ;;
-   ;; 指定がないと mode-line から色を引き継ぎ、選択中のタブが黒文字にオレンジの
-   ;; ベタ塗りになる。
+   ;; 線は選択中以外のタブと、右端までの埋め草に付けた下線で描く (init.el の
+   ;; accent-line)。選択中のタブは同じ色で塗っているため、下線が無くても線は途切れない。
+   ;;
+   ;; tab-bar の枠 (flat-button) は背景と同じ色で描かれ、文字の周りの余白になる。
+   ;; 上下の 3px で、centaur-tabs の段と同じ 32px の高さにする (15pt の 1 文字が 26px)。
+   ;;
+   ;; 帯そのものの背景は編集領域と揃え、塗るのは選択中のタブだけにする。
    `(tab-bar          ((t (:foreground ,light-grey :background ,bg-or-none))))
-   `(tab-bar-tab      ((t (:foreground ,orange :background ,bg-or-none
-                           :underline (:color ,orange)))))
-   `(tab-bar-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(tab-bar-tab      ((t (:foreground ,black :background ,orange
+                           :box (:line-width (10 . 3) :style flat-button)))))
+   `(tab-bar-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none
+                               :underline (:color ,orange)
+                               :box (:line-width (10 . 3) :style flat-button)))))
    ;; グループ (C-x t G) を使ったときの見え方も揃えておく
    `(tab-bar-tab-group-current  ((t (:foreground ,orange :background ,bg-or-none))))
    `(tab-bar-tab-group-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
    `(tab-bar-tab-ungrouped      ((t (:foreground ,light-grey :background ,bg-or-none))))
 
-   ;; ファイルのタブ (centaur-tabs)
-   ;;
-   ;; 上の tab-bar と同じく、帯の背景は編集領域と揃え、選択中はオレンジの文字と
-   ;; 下線で示す。選択中のタブだけ hl-line と同じ灰色を敷き、タブの形が分かるように
-   ;; する。色面が弱いので、視線を止めるほどにはならない。
-   ;;
    ;; centaur-tabs は tab-line に描く。tab-line の既定は明るい灰色の背景に
    ;; プロポーショナルフォントで、指定しないとタブの外側がそのまま見える。
+   ;; 色の付け方は上の tab-bar と同じ。
    `(tab-line ((t (:inherit nil :foreground ,light-grey :background ,bg-or-none))))
-   `(centaur-tabs-default    ((t (:foreground ,light-grey :background ,bg-or-none))))
-   `(centaur-tabs-unselected ((t (:foreground ,light-grey :background ,bg-or-none))))
-   `(centaur-tabs-selected   ((t (:foreground ,orange :background ,dark-grey))))
-   `(centaur-tabs-unselected-modified ((t (:foreground ,light-grey :background ,bg-or-none))))
-   `(centaur-tabs-selected-modified   ((t (:foreground ,orange :background ,dark-grey))))
-   `(centaur-tabs-close-unselected ((t (:foreground ,light-grey :background ,bg-or-none))))
-   `(centaur-tabs-close-selected   ((t (:foreground ,orange :background ,dark-grey))))
-   `(centaur-tabs-modified-marker-unselected ((t (:foreground ,orange :background ,bg-or-none))))
-   `(centaur-tabs-modified-marker-selected   ((t (:foreground ,orange :background ,dark-grey))))
+   `(centaur-tabs-default    ((t (:foreground ,light-grey :background ,bg-or-none
+                                  :underline (:color ,orange)))))
+   `(centaur-tabs-unselected ((t (:foreground ,light-grey :background ,bg-or-none
+                                  :underline (:color ,orange)))))
+   `(centaur-tabs-selected   ((t (:foreground ,black :background ,orange))))
+   `(centaur-tabs-unselected-modified ((t (:foreground ,light-grey :background ,bg-or-none
+                                           :underline (:color ,orange)))))
+   `(centaur-tabs-selected-modified   ((t (:foreground ,black :background ,orange))))
+   `(centaur-tabs-close-unselected ((t (:foreground ,light-grey :background ,bg-or-none
+                                        :underline (:color ,orange)))))
+   `(centaur-tabs-close-selected   ((t (:foreground ,black :background ,orange))))
+   `(centaur-tabs-modified-marker-unselected ((t (:foreground ,orange :background ,bg-or-none
+                                                  :underline (:color ,orange)))))
+   `(centaur-tabs-modified-marker-selected   ((t (:foreground ,black :background ,orange))))
    `(centaur-tabs-active-bar-face ((t (:background ,orange))))
 
    ;; 選択・検索
