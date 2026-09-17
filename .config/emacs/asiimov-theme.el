@@ -233,6 +233,9 @@
 
    ;; minibuffer
    `(minibuffer-prompt ((t (:foreground ,orange :weight bold))))
+   ;; 真ん中に浮かべた入力欄 (mini-frame) などの子フレームの枠。タブの塗りと同じ
+   ;; オレンジで囲み、編集画面の上に載っていることを示す
+   `(child-frame-border ((t (:background ,orange))))
 
    ;; 補完の注釈まわり。既定のままだと色が付かず、候補と区別できない
    `(completions-annotations     ((t (:foreground ,comment :slant italic))))
