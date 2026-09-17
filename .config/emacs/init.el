@@ -601,6 +601,90 @@
 (use-package embark-consult
   :after (embark consult))
 
+;; 何でも検索 (JetBrains の Search Everywhere 相当)。バッファ・ファイル・プロジェクト・
+;; コマンド・シンボルを 1 つの入力欄で探す。何を探すか決める前に手が止まらないよう、
+;; 入口を 1 つにする。
+;;
+;; 候補の種類ごとに一文字で絞り込める (consult の narrow)。
+;;   b: バッファ  f: 今のプロジェクトのファイル  r: 最近のファイル
+;;   p: プロジェクト  a: コマンド (Actions)  s: 今のバッファのシンボル
+
+(defvar i999rri--search-everywhere-history nil
+  "何でも検索の入力履歴。")
+
+(defun i999rri/search-everywhere--project-files (root)
+  "ROOT のプロジェクトのファイルを、(ROOT からの相対パス . 絶対パス) の組で返す。"
+  (mapcar (lambda (file) (cons (file-relative-name file root) file))
+          (project-files (project-current nil root))))
+
+(defun i999rri/search-everywhere--project-roots ()
+  "タブが覚えているプロジェクトと、project.el が知っているプロジェクトのルート。"
+  ;; タブの方を先に並べる。振り分けで作ったタブのプロジェクトは、project.el の
+  ;; 一覧に載っていないことがある
+  (seq-uniq (append (delq nil (mapcar (lambda (tab) (alist-get 'i999rri-project tab))
+                                      (funcall tab-bar-tabs-function)))
+                    (project-known-project-roots))
+            #'file-equal-p))
+
+(defun i999rri/search-everywhere--open-project (root)
+  "ROOT のプロジェクトのタブへ移る。タブが無ければ ROOT を開いてタブを作らせる。"
+  (if-let* ((index (seq-position (funcall tab-bar-tabs-function) root
+                                 (lambda (tab root)
+                                   (when-let* ((r (alist-get 'i999rri-project tab)))
+                                     (file-equal-p r root))))))
+      ;; タブがあれば、そこで開いているものはそのままにして移るだけにする
+      (tab-bar-select-tab (1+ index))
+    ;; 表示先のタブはプロジェクトのタブへの振り分けが決める
+    (dired root)))
+
+(defun i999rri/search-everywhere--commands ()
+  "M-x で呼べるコマンドの名前の一覧。"
+  (let (commands)
+    (mapatoms (lambda (symbol)
+                (when (commandp symbol)
+                  (push (symbol-name symbol) commands))))
+    commands))
+
+(defun i999rri/search-everywhere ()
+  "バッファ・ファイル・プロジェクト・コマンド・シンボルを 1 つの入力欄で探す。"
+  (interactive)
+  (require 'consult)
+  (require 'consult-imenu)
+  (let* ((project (project-current nil))
+         (root (and project (project-root project)))
+         ;; シンボルの一覧 (imenu) は入力欄を開いた後では作れない
+         ;; (consult が入力欄の中での計算を禁じている)。元のバッファで先に作る
+         (symbols (let ((items (ignore-errors (consult-imenu--items))))
+                    (consult-imenu--deduplicate items)
+                    (mapcar (lambda (item) (cons (car item) item)) items))))
+    (consult--multi
+     (list 'consult-source-buffer
+           (and root
+                `( :name "Project File" :narrow ?f :face consult-file
+                   :items ,(lambda () (i999rri/search-everywhere--project-files root))
+                   :action ,#'find-file))
+           ;; 既定の narrow は f で、プロジェクトのファイルと重なるため r にする。
+           ;; plist は先に書いた値が使われる
+           (append '(:name "Recent File" :narrow ?r) consult-source-recent-file)
+           `( :name "Project" :narrow ?p :face consult-file
+              :items ,(lambda ()
+                        (mapcar (lambda (r) (cons (abbreviate-file-name r) r))
+                                (i999rri/search-everywhere--project-roots)))
+              :action ,#'i999rri/search-everywhere--open-project)
+           `( :name "Command" :narrow ?a :category command
+              :items ,#'i999rri/search-everywhere--commands
+              :action ,(lambda (name) (command-execute (intern name) 'record)))
+           (and symbols
+                `( :name "Symbol" :narrow ?s
+                   :items ,symbols
+                   :action ,#'consult-imenu--jump)))
+     :prompt "Search Everywhere: "
+     :require-match t
+     :sort nil
+     :history 'i999rri--search-everywhere-history)))
+
+(keymap-global-set "C-c SPC" #'i999rri/search-everywhere)
+
 ;;; ---------------------------------------------------------------------------
 ;;; jump list (nvim の C-o / C-i 相当)
 ;;; ---------------------------------------------------------------------------
