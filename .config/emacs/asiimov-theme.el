@@ -74,6 +74,26 @@
    `(tab-bar-tab-group-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
    `(tab-bar-tab-ungrouped      ((t (:foreground ,light-grey :background ,bg-or-none))))
 
+   ;; ファイルのタブ (centaur-tabs)
+   ;;
+   ;; 上の tab-bar と同じく、帯の背景は編集領域と揃え、選択中はオレンジの文字と
+   ;; 下線で示す。選択中のタブだけ hl-line と同じ灰色を敷き、タブの形が分かるように
+   ;; する。色面が弱いので、視線を止めるほどにはならない。
+   ;;
+   ;; centaur-tabs は tab-line に描く。tab-line の既定は明るい灰色の背景に
+   ;; プロポーショナルフォントで、指定しないとタブの外側がそのまま見える。
+   `(tab-line ((t (:inherit nil :foreground ,light-grey :background ,bg-or-none))))
+   `(centaur-tabs-default    ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(centaur-tabs-unselected ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(centaur-tabs-selected   ((t (:foreground ,orange :background ,dark-grey))))
+   `(centaur-tabs-unselected-modified ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(centaur-tabs-selected-modified   ((t (:foreground ,orange :background ,dark-grey))))
+   `(centaur-tabs-close-unselected ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(centaur-tabs-close-selected   ((t (:foreground ,orange :background ,dark-grey))))
+   `(centaur-tabs-modified-marker-unselected ((t (:foreground ,orange :background ,bg-or-none))))
+   `(centaur-tabs-modified-marker-selected   ((t (:foreground ,orange :background ,dark-grey))))
+   `(centaur-tabs-active-bar-face ((t (:background ,orange))))
+
    ;; 選択・検索
    ;; region は Ghostty の selection-foreground / selection-background に合わせる
    ;; (nvim の Visual は fg が白だが、端末側は背景色と同じ濃い色を使っている)
