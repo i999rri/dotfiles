@@ -489,6 +489,83 @@
   :config
   (mini-frame-mode 1))
 
+;; 浮かべた入力欄で入力している間の which-key の一覧は、入力欄のすぐ下に子フレーム
+;; として出す。
+;;
+;; 入力欄のフレームは入力欄だけで分割できず、一覧を足す場所が無い。そのため
+;; mini-frame は入力中だけ which-key を別フレームで出させるが、そのフレームは親を
+;; 持たない独立した窓になり、Emacs の外に別のウィンドウが開く。フレームを作る所に
+;; 割り込み、本体の窓の子フレームとして入力欄の下に並べる。
+(defun i999rri/which-key-under-mini-frame-p ()
+  "浮かべた入力欄で入力しているかどうか。"
+  (and (bound-and-true-p mini-frame-mode)
+       (frame-live-p mini-frame-frame)
+       (eq (selected-frame) mini-frame-frame)))
+
+(defun i999rri/which-key-under-mini-frame-max-dimensions (fn &rest args)
+  "入力欄の下に出す一覧の最大の大きさ (行 . 桁) を返す。それ以外は FN に任せる。"
+  (if (not (i999rri/which-key-under-mini-frame-p))
+      (apply fn args)
+    ;; 幅は入力欄に揃え、高さは入力欄の下から本体の窓の下端までに収める
+    (let* ((parent (frame-parameter mini-frame-frame 'parent-frame))
+           (top (+ (cdr (frame-position mini-frame-frame))
+                   (frame-outer-height mini-frame-frame)))
+           (lines (/ (- (frame-inner-height parent) top)
+                     (frame-char-height mini-frame-frame))))
+      (cons (max 1 (1- lines)) (frame-width mini-frame-frame)))))
+
+(defun i999rri/which-key-show-under-mini-frame (fn act-popup-dim)
+  "which-key の一覧を、入力欄の下の子フレームに出す。それ以外は FN に任せる。"
+  (if (not (i999rri/which-key-under-mini-frame-p))
+      (funcall fn act-popup-dim)
+    (let* ((mini mini-frame-frame)
+           (position (frame-position mini))
+           (border (frame-parameter mini 'child-frame-border-width))
+           (params
+            `((parent-frame . ,(frame-parameter mini 'parent-frame))
+              (left . ,(car position))
+              ;; 枠の太さだけ上に重ね、入力欄の下の枠と一覧の上の枠を 1 本にする
+              (top . ,(- (+ (cdr position) (frame-outer-height mini)) border))
+              (width . (text-pixels . ,(frame-text-width mini)))
+              (height . ,(+ (car act-popup-dim)
+                            (if (with-current-buffer which-key--buffer mode-line-format) 1 0)))
+              ;; 見た目は入力欄に揃える。default-frame-alist から受け継ぐ透過と
+              ;; タブの帯は外す
+              (background-color . ,(frame-parameter mini 'background-color))
+              (child-frame-border-width . ,border)
+              (internal-border-width . ,border)
+              (alpha . 100)
+              (tab-bar-lines . 0)
+              (vertical-scroll-bars . nil)
+              (undecorated . t)
+              (minibuffer . nil)
+              (unsplittable . t)
+              (no-other-frame . t)
+              ;; 入力は入力欄が受け続ける
+              (no-accept-focus . t)
+              (no-focus-on-map . t)
+              (name . "which-key")
+              (visibility . t))))
+      (if (and (frame-live-p which-key--frame)
+               (eq which-key--buffer (window-buffer (frame-root-window which-key--frame))))
+          ;; ページを送ったときなど、出ている一覧を作り直さずに大きさと位置だけ直す
+          (progn
+            (modify-frame-parameters which-key--frame params)
+            (frame-root-window which-key--frame))
+        (when-let* ((window (display-buffer-pop-up-frame
+                             which-key--buffer `((pop-up-frame-parameters . ,params)))))
+          (setq which-key--frame (window-frame window))
+          ;; フリンジは入力欄と同じ幅のまま残し、幅と左右の余白を揃える。色だけ
+          ;; 背景に合わせて見えなくする (mini-frame が入力欄に行うのと同じ)
+          (set-face-background 'fringe nil which-key--frame)
+          window)))))
+
+(with-eval-after-load 'which-key
+  (advice-add 'which-key--frame-max-dimensions :around
+              #'i999rri/which-key-under-mini-frame-max-dimensions)
+  (advice-add 'which-key--show-buffer-frame :around
+              #'i999rri/which-key-show-under-mini-frame))
+
 (use-package orderless
   :custom
   (completion-styles '(orderless basic))
