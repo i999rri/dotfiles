@@ -1,31 +1,47 @@
-# Explorer とスタートメニューから開くファイルを、起動中の Emacs の 1 つのフレームに
-# 集める。プロジェクトごとのタブへの振り分けは init.el 側が行う。
+# Explorer・スタートメニュー・タスクバーから開くファイルを、裏で動いている Emacs の
+# 1 つのフレームに集める。プロジェクトごとのタブへの振り分けは init.el 側が行う。
 #
-# scoop update emacs を実行するとショートカットが manifest の既定 (-c で毎回新しい
-# 窓を作る) に戻るため、更新後にもう一度実行する。管理者権限は要らない。
+# Emacs は MSYS2 の mingw64 版を使う (pacman -S mingw-w64-x86_64-emacs)。ネイティブ
+# コンパイルに要る libgccjit が同じ場所の DLL で揃うため。管理者権限は要らない。
 
 $ErrorActionPreference = 'Stop'
 
-# current は scoop が更新のたびに張り替えるリンクなので、バージョンを跨いでも壊れない
-$bin = Join-Path (scoop prefix emacs) 'bin'
+# current は scoop が張るリンクなので、MSYS2 のバージョンを跨いでも壊れない
+$bin = Join-Path (scoop prefix msys2) 'mingw64\bin'
 $client = Join-Path $bin 'emacsclientw.exe'
-$icon = "$(Join-Path $bin 'runemacs.exe'),0"
+$daemon = Join-Path $bin 'runemacs.exe'
+$icon = "$daemon,0"
+if (-not (Test-Path $client)) { throw "MSYS2 の Emacs が見つからない: $client" }
 
 # -r: フレームがあればそれを使い、無ければ作る
 # -a "": サーバーが居なければ daemon を立ててから繋ぐ
 $clientArgs = '-r -n -a ""'
 
-# スタートメニュー。runemacs を直接起動すると別のプロセスになり、窓が分かれるため、
-# Emacs.lnk もクライアント経由にする
 $shell = New-Object -ComObject WScript.Shell
-$scoopApps = Join-Path ([Environment]::GetFolderPath('Programs')) 'Scoop Apps'
-foreach ($lnk in Get-ChildItem $scoopApps -Filter 'Emacs*.lnk') {
-    $shortcut = $shell.CreateShortcut($lnk.FullName)
-    $shortcut.TargetPath = $client
-    $shortcut.Arguments = $clientArgs
+function Set-Shortcut([string] $path, [string] $target, [string] $arguments) {
+    $shortcut = $shell.CreateShortcut($path)
+    $shortcut.TargetPath = $target
+    $shortcut.Arguments = $arguments
     $shortcut.IconLocation = $icon
     $shortcut.Save()
-    Write-Host "shortcut: $($lnk.Name)"
+    Write-Host "shortcut: $path"
+}
+
+$programs = [Environment]::GetFolderPath('Programs')
+
+# スタートメニュー。runemacs を直接起動すると daemon とは別のプロセスになり、窓が
+# 分かれるため、クライアント経由にする
+Set-Shortcut (Join-Path $programs 'Emacs.lnk') $client $clientArgs
+
+# ログイン時に daemon を立てておく。最初に開くときに起動を待たずに済む
+Set-Shortcut (Join-Path ([Environment]::GetFolderPath('Startup')) 'Emacs Daemon.lnk') $daemon '--daemon'
+
+# scoop 版の Emacs を残している間は、そのショートカットも同じ起動の仕方にそろえる
+$scoopApps = Join-Path $programs 'Scoop Apps'
+if (Test-Path $scoopApps) {
+    foreach ($lnk in Get-ChildItem $scoopApps -Filter 'Emacs*.lnk') {
+        Set-Shortcut $lnk.FullName $client $clientArgs
+    }
 }
 
 # タスクバーのピン留め。開いている窓からピン留めすると、窓の持ち主の emacs.exe を
@@ -37,16 +53,12 @@ $pinnedFolder = (New-Object -ComObject Shell.Application).Namespace($pinned)
 foreach ($item in @($pinnedFolder.Items())) {
     if (-not $item.Path.EndsWith('.lnk')) { continue }
 
-    $shortcut = $shell.CreateShortcut($item.Path)
+    $target = $shell.CreateShortcut($item.Path).TargetPath
     $isEmacs = $item.ExtendedProperty('System.AppUserModel.ID') -eq 'GNU.Emacs' -or
-        $shortcut.TargetPath -match '\\(run)?emacs\.exe$'
+        $target -match '\\(run)?emacs(client)?w?\.exe$'
     if (-not $isEmacs) { continue }
 
-    $shortcut.TargetPath = $client
-    $shortcut.Arguments = $clientArgs
-    $shortcut.IconLocation = $icon
-    $shortcut.Save()
-    Write-Host "taskbar: $(Split-Path -Leaf $item.Path)"
+    Set-Shortcut $item.Path $client $clientArgs
 }
 
 # Explorer の右クリック。* をパスとして扱うと wildcard に展開されるため、

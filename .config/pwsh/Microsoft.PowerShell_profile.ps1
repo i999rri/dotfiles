@@ -63,7 +63,12 @@ function global:prompt {
 # Open files in the running Emacs frame, routed to the tab of their project by
 # init.el. With no arguments, open the current directory. -a '' starts the
 # daemon first when no server is listening.
+#
+# Emacs comes from MSYS2 (mingw64), not from a scoop shim, so name the client by
+# path. A scoop emacsclientw on PATH would start a different Emacs as the daemon.
 function e {
+    $scoop = if ($env:SCOOP) { $env:SCOOP } else { Join-Path $HOME 'scoop' }
+    $client = Join-Path $scoop 'apps\msys2\current\mingw64\bin\emacsclientw.exe'
     $targets = if ($args.Count) { $args } else { '.' }
-    emacsclientw -r -n -a '' @targets
+    & $client -r -n -a '' @targets
 }
