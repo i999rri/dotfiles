@@ -438,14 +438,17 @@
   :config
   ;; 一覧で辿れないものだけボタンにする。Recent Files と Restore Session は
   ;; 上の items で足りるため置いていない。
+  ;;
+  ;; face はバッククォートの中なので quote を付けない。'default と書くと評価されずに
+  ;; (quote default) のまま残り、不正な face として描くたびに警告が出る。
   (setq dashboard-navigator-buttons
-        `((("" "Find File" "" (lambda (&rest _) (call-interactively #'find-file)) 'default)
+        `((("" "Find File" "" (lambda (&rest _) (call-interactively #'find-file)) default)
            ("" "Config"    "" (lambda (&rest _)
                                  (let ((default-directory i999rri/config-directory))
                                    (call-interactively #'find-file)))
-            'default)
-           ("" "Packages"  "" (lambda (&rest _) (elpaca-manager)) 'default)
-           ("" "Quit"      "" (lambda (&rest _) (save-buffers-kill-terminal)) 'default)))))
+            default)
+           ("" "Packages"  "" (lambda (&rest _) (elpaca-manager)) default)
+           ("" "Quit"      "" (lambda (&rest _) (save-buffers-kill-terminal)) default)))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; 補完 UI (fzf-lua / snacks picker 相当)
