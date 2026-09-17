@@ -125,10 +125,23 @@ wsl --shutdown
 
 これを切るとクリップボードの連携先が変わる (Wayland ではなく Windows 側の `clip.exe` / `Get-Clipboard`) が、そちらは NixOS 側で設定済み。詳細は [setup-nix.md](setup-nix.md) を参照。
 
-### 10. Emacs を使う場合はリンクを張る
+### 10. Emacs を使う場合は MSYS2 から入れ、リンクを張る
+
+Emacs は scoop の `emacs` ではなく、MSYS2 の mingw64 版を使う。入力欄を真ん中に浮かべる `mini-frame` は `read-from-minibuffer` などの C の関数にアドバイスを掛けるが、ネイティブコンパイル済みの Lisp から呼ばれるとアドバイスは素通りされる。これを通すにはトランポリンを実行時にコンパイルする `libgccjit` が要る。scoop 版は古い GCC の DLL を同梱しており、MSYS2 の `libgccjit` を読み込めない (`LoadLibrary` がエラー 127)。MSYS2 版は Emacs と `libgccjit` が同じ場所の DLL で揃う。
 
 ```powershell
-scoop install emacs
+scoop install msys2
+# scoop で msys2 を更新すると新しいディレクトリに切り替わり、pacman で入れた
+# パッケージが見えなくなる。中身の更新は pacman に任せる
+scoop hold msys2
+
+# 初回セットアップ (鍵の準備など)。msys2 本体の更新で一度終了することがあるため 2 回回す
+$bash = "$(scoop prefix msys2)\usr\bin\bash.exe"
+$env:MSYSTEM = 'MINGW64'
+& $bash -lc 'pacman -Syu --noconfirm'
+& $bash -lc 'pacman -Syu --noconfirm'
+& $bash -lc 'pacman -S --noconfirm --needed mingw-w64-x86_64-emacs mingw-w64-x86_64-librsvg mingw-w64-x86_64-libwebp'
+Remove-Item Env:MSYSTEM
 
 New-Item -ItemType SymbolicLink -Force `
   -Path "$HOME\AppData\Roaming\.emacs.d" `
@@ -137,7 +150,11 @@ New-Item -ItemType SymbolicLink -Force `
 
 Windows の Emacs は `HOME` が未設定だと `~` を `%APPDATA%` と解釈するため、設定を読む場所が `AppData\Roaming\.emacs.d` になる。`HOME` を設定すれば `~/.config/emacs` を見るようになるが、環境変数を足すと他のツールにも影響が波及するので、リンクで繋ぐだけにしている。
 
-初回起動時に elpaca が全パッケージを取得するため 1〜2 分かかる。
+初回起動時に elpaca が全パッケージを取得するため 1〜2 分かかる。取得したパッケージは裏でネイティブコンパイルされ、`eln-cache/` に溜まる。
+
+`librsvg` と `libwebp` は SVG と WebP の表示に使う。MSYS2 の Emacs は依存に含めていないため、明示的に入れる。
+
+Emacs のメジャーバージョンを上げたら、elpaca のパッケージを作り直す (`M-x elpaca-rebuild` を全パッケージに対して行う)。古い版でバイトコンパイルした `.elc` は、新しい版で名前が変わった内部の変数を参照したままになる。Emacs 30 から 31 に上げたときは、`define-globalized-minor-mode` の変数が `MODE-set-explicitly` から `MODE--set-explicitly` に変わり、`M-x` を開くたびに `void-variable corfu-mode--set-explicitly` で止まった。
 
 **Windows では GUI 版 (`runemacs`) を使う。** `emacs -nw` は Windows のコンソール API を直接叩く実装になっており、ConPTY ベースの端末では初期化に失敗する。
 
@@ -153,15 +170,15 @@ terminal で使いたい場合は WSL 側に Emacs を入れる。dotfiles は `
 
 #### どこから開いても 1 つの窓にまとめる
 
-スタートメニュー・Explorer の右クリック・「プログラムから開く」を `emacsclientw -r` 経由にする。管理者権限は要らない。
+スタートメニュー・タスクバーのピン留め・Explorer の右クリック・「プログラムから開く」を `emacsclientw -r` 経由にし、ログイン時に daemon を起動するショートカットを置く。どれも MSYS2 の Emacs を指す。管理者権限は要らない。
 
 ```powershell
 & "$HOME\source\repos\dotfiles\.config\dotfiles\windows\emacs-client.ps1"
 ```
 
-`scoop update emacs` でショートカットが既定 (`-c` で毎回新しい窓を作る) に戻るため、更新したら再実行する。タスクバーのピン留めも、開いている窓から付け直すと `emacs.exe` を直接起動するものになるため、付け直したら再実行する。
+タスクバーのピン留めは、開いている窓から付け直すと `emacs.exe` を直接起動するものになるため、付け直したら再実行する。
 
-ターミナルからは pwsh プロファイルの `e` を使う (`e .` や `e file.txt`)。開いたファイルはプロジェクトごとのタブに振り分けられる (`init.el` の `server-window`)。
+ターミナルからは pwsh プロファイルの `e` を使う (`e .` や `e file.txt`)。開いたファイルはプロジェクトごとのタブに振り分けられる (`init.el` の `display-buffer-alist`)。
 
 Windows 11 の右クリックメニューでは「その他のオプションを確認」の中に出る。拡張子の既定アプリにしたい場合は、「プログラムから開く」→「Emacs」→「常に使う」を手で選ぶ。
 
