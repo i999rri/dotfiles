@@ -858,6 +858,16 @@
   "新しいタブに出すバッファ。閉じ切ったときの落ち先と同じ場所にする。"
   (or (i999rri/dashboard-buffer) (get-scratch-buffer-create)))
 
+;; 別のタブにいる間に閉じられたバッファは、タブに戻ったとき dashboard に差し替える。
+;; 既定では「このバッファは閉じられた」という読み取り専用の案内が代わりに出る。
+;; プロジェクトのタブへの振り分けでこれが起きやすい。dired で別のプロジェクトへ
+;; 入ると、新しい一覧は向こうのタブに出る一方で、元のタブの一覧だけが閉じられる。
+(defun i999rri/tab-restore-killed-windows (_frame windows _type)
+  "WINDOWS のうち、表示していたバッファが閉じられた窓に dashboard を出す。"
+  (dolist (entry windows)
+    (when (window-live-p (car entry))
+      (set-window-buffer (car entry) (i999rri/tab-new-buffer)))))
+
 (use-package tab-bar
   :ensure nil
   :custom
@@ -874,6 +884,7 @@
   (tab-bar-close-button-show nil)     ; キーボードで閉じるのでボタンは要らない
   (tab-bar-new-button-show nil)
   (tab-bar-new-tab-choice #'i999rri/tab-new-buffer)
+  (tab-bar-select-restore-windows #'i999rri/tab-restore-killed-windows)
   (tab-bar-tab-name-function #'i999rri/tab-name)
   :bind (("C-<tab>"   . tab-next)
          ("C-S-<tab>" . tab-previous))
