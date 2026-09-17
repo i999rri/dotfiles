@@ -635,14 +635,18 @@
   (corfu-auto-delay 0.1)
   (corfu-auto-prefix 1)
   (corfu-cycle t)
-  ;; terminal 版ではポップアップが描けないため、下の corfu-terminal に任せる
+  ;; Emacs 30 までの terminal 版ではポップアップが描けないため、下の corfu-terminal に任せる
   (corfu-popupinfo-delay '(0.5 . 0.2)))
 
-(use-package corfu-terminal
-  :after corfu
-  :config
-  (unless (display-graphic-p)
-    (corfu-terminal-mode 1)))
+;; Emacs 31 は terminal でも子フレームを描けるため、corfu 自身がポップアップを出す。
+;; 31 で corfu-terminal を読むと「不要」の警告が出るので、30 以前に限って入れる。
+;; WSL や macOS 側はまだ 30 の場合がある
+(when (< emacs-major-version 31)
+  (use-package corfu-terminal
+    :after corfu
+    :config
+    (unless (display-graphic-p)
+      (corfu-terminal-mode 1))))
 
 ;; nvim の nvim-cmp は sources を
 ;;   1. skkeleton / nvim_lsp / luasnip / nvim_lua
