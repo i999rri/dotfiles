@@ -57,22 +57,49 @@
    `(vertical-border  ((t (:foreground ,dark-grey))))
    `(fill-column-indicator ((t (:foreground ,dark-grey))))
 
-   ;; タブ (tab-bar)
+   ;; タブ (tab-bar と、その下の段の centaur-tabs)
    ;;
-   ;; 帯の背景を編集領域と揃えて境目を作らない。今いるタブはオレンジの文字と下線で
-   ;; 示す。ベタ塗りにしないのは、画面の上端に強い色面があると視線がそこで止まり、
-   ;; 本文へ戻るのに一拍かかるため。
+   ;; Visual Studio (2019 まで) のドキュメントタブの形にする。選択中のタブはオレンジで
+   ;; 塗って黒い文字にし、段の下にオレンジの線を横いっぱいに引く。塗ったタブと編集画面が
+   ;; この線でつながり、どのタブを見ているかが形で分かる。
    ;;
-   ;; 指定がないと mode-line から色を引き継ぎ、選択中のタブが黒文字にオレンジの
-   ;; ベタ塗りになる。
+   ;; 線は選択中以外のタブと、右端までの埋め草に付けた下線で描く (init.el の
+   ;; accent-line)。選択中のタブは同じ色で塗っているため、下線が無くても線は途切れない。
+   ;;
+   ;; tab-bar の枠 (flat-button) は背景と同じ色で描かれ、文字の周りの余白になる。
+   ;; 上下の 3px で、centaur-tabs の段と同じ 32px の高さにする (15pt の 1 文字が 26px)。
+   ;;
+   ;; 帯そのものの背景は編集領域と揃え、塗るのは選択中のタブだけにする。
    `(tab-bar          ((t (:foreground ,light-grey :background ,bg-or-none))))
-   `(tab-bar-tab      ((t (:foreground ,orange :background ,bg-or-none
-                           :underline (:color ,orange)))))
-   `(tab-bar-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(tab-bar-tab      ((t (:foreground ,black :background ,orange
+                           :box (:line-width (10 . 3) :style flat-button)))))
+   `(tab-bar-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none
+                               :underline (:color ,orange)
+                               :box (:line-width (10 . 3) :style flat-button)))))
    ;; グループ (C-x t G) を使ったときの見え方も揃えておく
    `(tab-bar-tab-group-current  ((t (:foreground ,orange :background ,bg-or-none))))
    `(tab-bar-tab-group-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
    `(tab-bar-tab-ungrouped      ((t (:foreground ,light-grey :background ,bg-or-none))))
+
+   ;; centaur-tabs は tab-line に描く。tab-line の既定は明るい灰色の背景に
+   ;; プロポーショナルフォントで、指定しないとタブの外側がそのまま見える。
+   ;; 色の付け方は上の tab-bar と同じ。
+   `(tab-line ((t (:inherit nil :foreground ,light-grey :background ,bg-or-none))))
+   `(centaur-tabs-default    ((t (:foreground ,light-grey :background ,bg-or-none
+                                  :underline (:color ,orange)))))
+   `(centaur-tabs-unselected ((t (:foreground ,light-grey :background ,bg-or-none
+                                  :underline (:color ,orange)))))
+   `(centaur-tabs-selected   ((t (:foreground ,black :background ,orange))))
+   `(centaur-tabs-unselected-modified ((t (:foreground ,light-grey :background ,bg-or-none
+                                           :underline (:color ,orange)))))
+   `(centaur-tabs-selected-modified   ((t (:foreground ,black :background ,orange))))
+   `(centaur-tabs-close-unselected ((t (:foreground ,light-grey :background ,bg-or-none
+                                        :underline (:color ,orange)))))
+   `(centaur-tabs-close-selected   ((t (:foreground ,black :background ,orange))))
+   `(centaur-tabs-modified-marker-unselected ((t (:foreground ,orange :background ,bg-or-none
+                                                  :underline (:color ,orange)))))
+   `(centaur-tabs-modified-marker-selected   ((t (:foreground ,black :background ,orange))))
+   `(centaur-tabs-active-bar-face ((t (:background ,orange))))
 
    ;; 選択・検索
    ;; region は Ghostty の selection-foreground / selection-background に合わせる
@@ -87,11 +114,6 @@
    `(mode-line          ((t (:foreground ,black :background ,orange))))
    `(mode-line-inactive ((t (:foreground ,grey  :background ,dark-grey))))
    `(mode-line-buffer-id ((t (:weight bold))))
-
-   ;; タブ (nvim の TabLine)
-   `(tab-bar          ((t (:foreground ,grey  :background ,dark-grey))))
-   `(tab-bar-tab      ((t (:foreground ,black :background ,orange))))
-   `(tab-bar-tab-inactive ((t (:foreground ,grey :background ,dark-grey))))
 
    ;; 補完のポップアップ (nvim の Pmenu)
    `(corfu-default    ((t (:foreground ,fg    :background ,dark-grey))))
@@ -211,6 +233,9 @@
 
    ;; minibuffer
    `(minibuffer-prompt ((t (:foreground ,orange :weight bold))))
+   ;; 真ん中に浮かべた入力欄 (mini-frame) などの子フレームの枠。タブの塗りと同じ
+   ;; オレンジで囲み、編集画面の上に載っていることを示す
+   `(child-frame-border ((t (:background ,orange))))
 
    ;; 補完の注釈まわり。既定のままだと色が付かず、候補と区別できない
    `(completions-annotations     ((t (:foreground ,comment :slant italic))))

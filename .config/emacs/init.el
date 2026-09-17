@@ -103,6 +103,14 @@
 (setq display-line-numbers-type 'absolute)
 (global-display-line-numbers-mode 1)
 
+;; 行番号の欄は 4 桁ぶんを常に確保する。既定では画面に見えている行番号に合わせて
+;; 幅が決まるため、99 行目から 100 行目へスクロールしたときやファイルを切り替えた
+;; ときに、コードの始まる位置が横にずれる。
+;;
+;; 1 万行を超えて欄が広がった場合も、スクロールで戻ったときに縮めない。
+(setq-default display-line-numbers-width 4)
+(setq display-line-numbers-grow-only t)
+
 ;; nvim: vim.opt.cursorline = true
 (global-hl-line-mode 1)
 
@@ -438,14 +446,17 @@
   :config
   ;; 一覧で辿れないものだけボタンにする。Recent Files と Restore Session は
   ;; 上の items で足りるため置いていない。
+  ;;
+  ;; face はバッククォートの中なので quote を付けない。'default と書くと評価されずに
+  ;; (quote default) のまま残り、不正な face として描くたびに警告が出る。
   (setq dashboard-navigator-buttons
-        `((("" "Find File" "" (lambda (&rest _) (call-interactively #'find-file)) 'default)
+        `((("" "Find File" "" (lambda (&rest _) (call-interactively #'find-file)) default)
            ("" "Config"    "" (lambda (&rest _)
                                  (let ((default-directory i999rri/config-directory))
                                    (call-interactively #'find-file)))
-            'default)
-           ("" "Packages"  "" (lambda (&rest _) (elpaca-manager)) 'default)
-           ("" "Quit"      "" (lambda (&rest _) (save-buffers-kill-terminal)) 'default)))))
+            default)
+           ("" "Packages"  "" (lambda (&rest _) (elpaca-manager)) default)
+           ("" "Quit"      "" (lambda (&rest _) (save-buffers-kill-terminal)) default)))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; 補完 UI (fzf-lua / snacks picker 相当)
@@ -454,6 +465,106 @@
 (use-package vertico
   :init (vertico-mode 1)
   :custom (vertico-cycle t))
+
+;; 入力欄を画面の下ではなく、編集画面の上の方の真ん中に浮かべる。JetBrains の
+;; Search Everywhere のように、何かを探すときは視線の先に入力欄が出る。
+;;
+;; 入力欄を丸ごと子フレームに移すため、vertico の候補だけでなく、read-string や
+;; yes-or-no-p の問いも浮かぶ。M-: (eval-expression) だけは既定どおり下に残す。
+;; 子フレームにはモードラインが無く、引数のヒント (eldoc) を出す場所が無いため。
+;; 浮かぶ入力欄が壊れたときも、M-: で (mini-frame-mode -1) を評価して切れる。
+(use-package mini-frame
+  ;; :custom だけだと読み込みが遅れ、モードが有効にならない
+  :demand t
+  :custom
+  ;; 不透明にする。子フレームも default-frame-alist の alpha (Windows では 90) を
+  ;; 受け継ぎ、後ろの編集画面の文字が候補に重なって読めなくなる
+  (mini-frame-show-parameters '((top . 0.2)
+                                (left . 0.5)
+                                (width . 0.6)
+                                (alpha . 100)))
+  ;; 背景は編集画面の色を文字色の方へ 12 ずらした #2a2a2a にする。hl-line と
+  ;; 同じ灰色で、編集画面から一段浮いて見える。既定の 27 では明るすぎる
+  (mini-frame-color-shift-step 12)
+  :config
+  (mini-frame-mode 1))
+
+;; 浮かべた入力欄で入力している間の which-key の一覧は、入力欄のすぐ下に子フレーム
+;; として出す。
+;;
+;; 入力欄のフレームは入力欄だけで分割できず、一覧を足す場所が無い。そのため
+;; mini-frame は入力中だけ which-key を別フレームで出させるが、そのフレームは親を
+;; 持たない独立した窓になり、Emacs の外に別のウィンドウが開く。フレームを作る所に
+;; 割り込み、本体の窓の子フレームとして入力欄の下に並べる。
+(defun i999rri/which-key-under-mini-frame-p ()
+  "浮かべた入力欄で入力しているかどうか。"
+  (and (bound-and-true-p mini-frame-mode)
+       (frame-live-p mini-frame-frame)
+       (eq (selected-frame) mini-frame-frame)))
+
+(defun i999rri/which-key-under-mini-frame-max-dimensions (fn &rest args)
+  "入力欄の下に出す一覧の最大の大きさ (行 . 桁) を返す。それ以外は FN に任せる。"
+  (if (not (i999rri/which-key-under-mini-frame-p))
+      (apply fn args)
+    ;; 幅は入力欄に揃え、高さは入力欄の下から本体の窓の下端までに収める
+    (let* ((parent (frame-parameter mini-frame-frame 'parent-frame))
+           (top (+ (cdr (frame-position mini-frame-frame))
+                   (frame-outer-height mini-frame-frame)))
+           (lines (/ (- (frame-inner-height parent) top)
+                     (frame-char-height mini-frame-frame))))
+      (cons (max 1 (1- lines)) (frame-width mini-frame-frame)))))
+
+(defun i999rri/which-key-show-under-mini-frame (fn act-popup-dim)
+  "which-key の一覧を、入力欄の下の子フレームに出す。それ以外は FN に任せる。"
+  (if (not (i999rri/which-key-under-mini-frame-p))
+      (funcall fn act-popup-dim)
+    (let* ((mini mini-frame-frame)
+           (position (frame-position mini))
+           (border (frame-parameter mini 'child-frame-border-width))
+           (params
+            `((parent-frame . ,(frame-parameter mini 'parent-frame))
+              (left . ,(car position))
+              ;; 枠の太さだけ上に重ね、入力欄の下の枠と一覧の上の枠を 1 本にする
+              (top . ,(- (+ (cdr position) (frame-outer-height mini)) border))
+              (width . (text-pixels . ,(frame-text-width mini)))
+              (height . ,(+ (car act-popup-dim)
+                            (if (with-current-buffer which-key--buffer mode-line-format) 1 0)))
+              ;; 見た目は入力欄に揃える。default-frame-alist から受け継ぐ透過と
+              ;; タブの帯は外す
+              (background-color . ,(frame-parameter mini 'background-color))
+              (child-frame-border-width . ,border)
+              (internal-border-width . ,border)
+              (alpha . 100)
+              (tab-bar-lines . 0)
+              (vertical-scroll-bars . nil)
+              (undecorated . t)
+              (minibuffer . nil)
+              (unsplittable . t)
+              (no-other-frame . t)
+              ;; 入力は入力欄が受け続ける
+              (no-accept-focus . t)
+              (no-focus-on-map . t)
+              (name . "which-key")
+              (visibility . t))))
+      (if (and (frame-live-p which-key--frame)
+               (eq which-key--buffer (window-buffer (frame-root-window which-key--frame))))
+          ;; ページを送ったときなど、出ている一覧を作り直さずに大きさと位置だけ直す
+          (progn
+            (modify-frame-parameters which-key--frame params)
+            (frame-root-window which-key--frame))
+        (when-let* ((window (display-buffer-pop-up-frame
+                             which-key--buffer `((pop-up-frame-parameters . ,params)))))
+          (setq which-key--frame (window-frame window))
+          ;; フリンジは入力欄と同じ幅のまま残し、幅と左右の余白を揃える。色だけ
+          ;; 背景に合わせて見えなくする (mini-frame が入力欄に行うのと同じ)
+          (set-face-background 'fringe nil which-key--frame)
+          window)))))
+
+(with-eval-after-load 'which-key
+  (advice-add 'which-key--frame-max-dimensions :around
+              #'i999rri/which-key-under-mini-frame-max-dimensions)
+  (advice-add 'which-key--show-buffer-frame :around
+              #'i999rri/which-key-show-under-mini-frame))
 
 (use-package orderless
   :custom
@@ -489,6 +600,123 @@
 
 (use-package embark-consult
   :after (embark consult))
+
+;; 何でも検索 (JetBrains の Search Everywhere 相当)。バッファ・ファイル・プロジェクト・
+;; コマンド・シンボルを 1 つの入力欄で探す。何を探すか決める前に手が止まらないよう、
+;; 入口を 1 つにする。
+;;
+;; 候補の種類ごとに一文字で絞り込める (consult の narrow)。
+;;   b: バッファ  f: 今のプロジェクトのファイル  r: 最近のファイル
+;;   p: プロジェクト  a: コマンド (Actions)  s: 今のバッファのシンボル
+
+(defvar i999rri--search-everywhere-history nil
+  "何でも検索の入力履歴。")
+
+(defun i999rri/search-everywhere--project-files (root)
+  "ROOT のプロジェクトのファイルを、(ROOT からの相対パス . 絶対パス) の組で返す。"
+  (mapcar (lambda (file) (cons (file-relative-name file root) file))
+          (project-files (project-current nil root))))
+
+(defun i999rri/search-everywhere--project-roots ()
+  "タブが覚えているプロジェクトと、project.el が知っているプロジェクトのルート。"
+  ;; タブの方を先に並べる。振り分けで作ったタブのプロジェクトは、project.el の
+  ;; 一覧に載っていないことがある
+  (seq-uniq (append (delq nil (mapcar (lambda (tab) (alist-get 'i999rri-project tab))
+                                      (funcall tab-bar-tabs-function)))
+                    (project-known-project-roots))
+            #'file-equal-p))
+
+(defun i999rri/project-tab-number (root &optional frame)
+  "FRAME で ROOT のプロジェクトを覚えているタブの番号 (1 始まり)。無ければ nil。"
+  (when-let* ((index (seq-position (funcall tab-bar-tabs-function frame) root
+                                   (lambda (tab root)
+                                     (when-let* ((r (alist-get 'i999rri-project tab)))
+                                       (file-equal-p r root))))))
+    (1+ index)))
+
+(defun i999rri/search-everywhere--open-project (root)
+  "ROOT のプロジェクトのタブへ移る。タブが無ければ ROOT を開いてタブを作らせる。"
+  (if-let* ((number (i999rri/project-tab-number root)))
+      ;; タブがあれば、そこで開いているものはそのままにして移るだけにする
+      (tab-bar-select-tab number)
+    ;; 表示先のタブはプロジェクトのタブへの振り分けが決める
+    (dired root)))
+
+(defun i999rri/search-everywhere--project-preview ()
+  "プロジェクトの候補の上に来たら、後ろの画面をそのタブに仮で切り替える状態関数を作る。"
+  ;; consult は入力欄を開く前にこれを呼ぶ。本体のフレームと元のタブはここで覚える。
+  ;; 入力欄が浮いている間は選択中のフレームが入力欄の子フレームになるため、
+  ;; タブは本体のフレームを指定して切り替える
+  (let* ((frame (selected-frame))
+         (origin (1+ (tab-bar--current-tab-index nil frame)))
+         (select (lambda (number)
+                   (with-selected-frame frame
+                     (unless (= number (1+ (tab-bar--current-tab-index)))
+                       (tab-bar-select-tab number))))))
+    (lambda (action root)
+      (pcase action
+        ;; 開いていないプロジェクトや、ほかの種類の候補の上 (ROOT が nil) では元に戻す
+        ('preview (funcall select (or (and root (i999rri/project-tab-number root frame))
+                                      origin)))
+        ;; 選んだ場合も一度元に戻す。確定は入力欄を閉じた後の :action で行う
+        ('exit (funcall select origin))))))
+
+(defun i999rri/search-everywhere--commands ()
+  "M-x で呼べるコマンドの名前の一覧。"
+  (let (commands)
+    (mapatoms (lambda (symbol)
+                (when (commandp symbol)
+                  (push (symbol-name symbol) commands))))
+    commands))
+
+(defun i999rri/search-everywhere ()
+  "バッファ・ファイル・プロジェクト・コマンド・シンボルを 1 つの入力欄で探す。"
+  (interactive)
+  (require 'consult)
+  (require 'consult-imenu)
+  (let* ((project (project-current nil))
+         (root (and project (project-root project)))
+         ;; シンボルの一覧 (imenu) は入力欄を開いた後では作れない
+         ;; (consult が入力欄の中での計算を禁じている)。元のバッファで先に作る
+         (symbols (let ((items (ignore-errors (consult-imenu--items))))
+                    (consult-imenu--deduplicate items)
+                    (mapcar (lambda (item) (cons (car item) item)) items))))
+    (consult--multi
+     (list 'consult-source-buffer
+           (and root
+                `( :name "Project File" :narrow ?f :face consult-file
+                   :items ,(lambda () (i999rri/search-everywhere--project-files root))
+                   :action ,#'find-file))
+           ;; 既定の narrow は f で、プロジェクトのファイルと重なるため r にする。
+           ;; plist は先に書いた値が使われる
+           (append '(:name "Recent File" :narrow ?r) consult-source-recent-file)
+           `( :name "Project" :narrow ?p :face consult-file
+              :items ,(lambda ()
+                        (let ((current (alist-get 'i999rri-project
+                                                  (cdr (tab-bar--current-tab-find)))))
+                          (mapcar (lambda (r)
+                                    ;; 今いるプロジェクトに印を付ける
+                                    (cons (concat (if (and current (file-equal-p r current))
+                                                      "● "
+                                                    "  ")
+                                                  (abbreviate-file-name r))
+                                          r))
+                                  (i999rri/search-everywhere--project-roots))))
+              :state ,#'i999rri/search-everywhere--project-preview
+              :action ,#'i999rri/search-everywhere--open-project)
+           `( :name "Command" :narrow ?a :category command
+              :items ,#'i999rri/search-everywhere--commands
+              :action ,(lambda (name) (command-execute (intern name) 'record)))
+           (and symbols
+                `( :name "Symbol" :narrow ?s
+                   :items ,symbols
+                   :action ,#'consult-imenu--jump)))
+     :prompt "Search Everywhere: "
+     :require-match t
+     :sort nil
+     :history 'i999rri--search-everywhere-history)))
+
+(keymap-global-set "C-c SPC" #'i999rri/search-everywhere)
 
 ;;; ---------------------------------------------------------------------------
 ;;; jump list (nvim の C-o / C-i 相当)
@@ -624,14 +852,18 @@
   (corfu-auto-delay 0.1)
   (corfu-auto-prefix 1)
   (corfu-cycle t)
-  ;; terminal 版ではポップアップが描けないため、下の corfu-terminal に任せる
+  ;; Emacs 30 までの terminal 版ではポップアップが描けないため、下の corfu-terminal に任せる
   (corfu-popupinfo-delay '(0.5 . 0.2)))
 
-(use-package corfu-terminal
-  :after corfu
-  :config
-  (unless (display-graphic-p)
-    (corfu-terminal-mode 1)))
+;; Emacs 31 は terminal でも子フレームを描けるため、corfu 自身がポップアップを出す。
+;; 31 で corfu-terminal を読むと「不要」の警告が出るので、30 以前に限って入れる。
+;; WSL や macOS 側はまだ 30 の場合がある
+(when (< emacs-major-version 31)
+  (use-package corfu-terminal
+    :after corfu
+    :config
+    (unless (display-graphic-p)
+      (corfu-terminal-mode 1))))
 
 ;; nvim の nvim-cmp は sources を
 ;;   1. skkeleton / nvim_lsp / luasnip / nvim_lua
@@ -854,31 +1086,291 @@
              (project-name p)))
       (tab-bar-tab-name-current)))
 
+(defun i999rri/tab-bar-format-icon (name tab _i)
+  "NAME の前に、TAB の中身を表すアイコンを付ける。"
+  ;; 下の段の centaur-tabs がファイルの種類のアイコンを出すのに揃える。
+  ;; プロジェクトかどうかは、振り分けがタブに覚えさせている値で見る
+  (if (not (fboundp 'nerd-icons-octicon))
+      name
+    (concat (nerd-icons-octicon
+             (cond ((alist-get 'i999rri-project tab) "nf-oct-repo")
+                   ((equal (alist-get 'name tab) (bound-and-true-p dashboard-buffer-name))
+                    "nf-oct-home")
+                   (t "nf-oct-file")))
+            " " name)))
+
+;; タブの段の下に、横いっぱいのアクセントの線を引く。Visual Studio (2019 まで) の
+;; ドキュメントタブの形で、塗った選択中のタブと編集画面がこの線でつながって見える。
+;;
+;; 線は選択中以外のタブに付けた下線で描く。下線は文字のある所にしか引かれない
+;; ため、最後のタブから右端までを幅だけの空白で埋め、同じ face で下線を続ける。
+(defun i999rri/tab-bar-format-accent-line ()
+  "最後のタブから帯の右端までを、選択中以外のタブと同じ下線で埋める。"
+  `((accent-line menu-item
+                 ,(propertize " " 'display '(space :align-to right)
+                              'face 'tab-bar-tab-inactive)
+                 ignore)))
+
+;; 閉じるボタンは、下の段の centaur-tabs と同じ文字の × にする。
+;; 既定のボタンは tab-bar-mode を有効にするたびにアイコン (tab-bar-close) から
+;; 作り直され、そのとき画像が使えれば画像、使えなければ " x" の文字になる。
+;; daemon は GUI の無い状態で有効にするため、起動の仕方で見た目が変わる。
+;; モードの本体がボタンを作った後に走るフックで、文字に置き換える。
+(defun i999rri/tab-bar-close-button-text ()
+  "tab-bar の閉じるボタンを文字の × にする。"
+  (setq tab-bar-close-button
+        (propertize " ×" 'close-tab t 'help-echo "Click to close tab")))
+
 (defun i999rri/tab-new-buffer ()
   "新しいタブに出すバッファ。閉じ切ったときの落ち先と同じ場所にする。"
   (or (i999rri/dashboard-buffer) (get-scratch-buffer-create)))
 
+;; 別のタブにいる間に閉じられたバッファは、タブに戻ったとき dashboard に差し替える。
+;; 既定では「このバッファは閉じられた」という読み取り専用の案内が代わりに出る。
+;; プロジェクトのタブへの振り分けでこれが起きやすい。dired で別のプロジェクトへ
+;; 入ると、新しい一覧は向こうのタブに出る一方で、元のタブの一覧だけが閉じられる。
+(defun i999rri/tab-restore-killed-windows (_frame windows _type)
+  "WINDOWS のうち、表示していたバッファが閉じられた窓に dashboard を出す。"
+  (dolist (entry windows)
+    (when (window-live-p (car entry))
+      (set-window-buffer (car entry) (i999rri/tab-new-buffer)))))
+
 (use-package tab-bar
   :ensure nil
   :custom
-  ;; タブが 1 つでも帯を出す。隠すと、今いるタブも機能が入っていることも見えない
-  (tab-bar-show t)
+  ;; 帯は隠す。下の段のファイルのタブと合わせると、画面の上端が 2 段のタブで
+  ;; 埋まる。どのプロジェクトがあるかは、切り替えるときに見えれば足りる。
+  ;;
+  ;; タブ自体はプロジェクトの作業空間として残り、振り分けも動く。切り替えは
+  ;; 何でも検索 (C-c SPC の p) から行う。見た目の設定 (テーマの face、アイコン、
+  ;; 閉じるボタン、アクセントの線) は、t に戻せば帯がそのまま出るよう残してある
+  (tab-bar-show nil)
   (tab-bar-tab-hints t)               ; 番号を振る
-  ;; タブの間隔。背景のベタ塗りをやめたぶん、区切りが空白の幅だけになる。
-  ;; 既定は空白 1 つで、隣のタブの番号と続けて読めてしまう
-  (tab-bar-separator "   ")
-  ;; タブの幅の上限。auto-width は幅を揃えたうえで帯を埋めようと広げるため、
-  ;; タブが少ないとここまで伸びる。既定の 220px / 20 桁は、プロジェクト名を
-  ;; 出すには余る。下線を名前の幅に近づけたいので詰めている
-  (tab-bar-auto-width-max '((140) 12))
-  (tab-bar-close-button-show nil)     ; キーボードで閉じるのでボタンは要らない
+  ;; タブの間隔はテーマの枠 (左右 10px の余白) で取るため、区切りの文字は置かない
+  (tab-bar-separator "")
+  ;; タブの幅は名前に合わせる。auto-width は幅を揃えたうえで帯を埋めようと広げ、
+  ;; 選択中のタブの塗りも一緒に伸びる。下の段の centaur-tabs とも揃わない
+  (tab-bar-auto-width nil)
+  ;; 既定の並びの最後に、アクセントの線を右端まで延ばす項目を足す
+  (tab-bar-format '(tab-bar-format-history
+                    tab-bar-format-tabs
+                    tab-bar-separator
+                    tab-bar-format-add-tab
+                    i999rri/tab-bar-format-accent-line))
+  ;; 下の段の centaur-tabs と同じく、マウスでも閉じられるようにする
+  (tab-bar-close-button-show t)
   (tab-bar-new-button-show nil)
+  (tab-bar-tab-name-format-functions '(tab-bar-tab-name-format-hints
+                                       i999rri/tab-bar-format-icon
+                                       tab-bar-tab-name-format-close-button
+                                       tab-bar-tab-name-format-face))
   (tab-bar-new-tab-choice #'i999rri/tab-new-buffer)
+  (tab-bar-select-restore-windows #'i999rri/tab-restore-killed-windows)
   (tab-bar-tab-name-function #'i999rri/tab-name)
-  :bind (("C-<tab>"   . tab-next)
-         ("C-S-<tab>" . tab-previous))
   :init
+  (add-hook 'tab-bar-mode-hook #'i999rri/tab-bar-close-button-text)
   (tab-bar-mode 1))
+
+;;; ---------------------------------------------------------------------------
+;;; ファイルのタブ (centaur-tabs)
+;;; ---------------------------------------------------------------------------
+
+;; 上の tab-bar がプロジェクトを並べ、その下の段にいま見ているプロジェクトの
+;; バッファを並べる。Visual Studio のドキュメントタブのように、マウスで切り替えたり
+;; 閉じたりできる。
+;;
+;; 描く場所は各窓の tab-line で、header-line は使わない。
+
+(defun i999rri/centaur-tabs-group ()
+  "今のバッファを並べるタブの組。プロジェクトのタブへの振り分けと同じ基準で分ける。"
+  ;; 基準を振り分けと揃えるため、centaur-tabs 既定の分け方は使わない。既定では
+  ;; *eat* のような裏方もプロジェクト名で束ねるが、振り分けはそれを今のタブに
+  ;; 残すので、並ぶタブと居るタブの所属が食い違う。
+  (list (or (i999rri/buffer-project-root (current-buffer))
+            (if (string-match-p "\\`[ *]" (buffer-name)) "Emacs" "Other"))))
+
+(defun i999rri/centaur-tabs-accent-line (line)
+  "centaur-tabs の LINE の後ろを、選択中以外のタブと同じ下線で右端まで埋める。"
+  ;; 上の tab-bar と同じ、横いっぱいのアクセントの線にする。
+  ;; tab-bar と違い、幅だけの空白 (space :align-to) では下線が段の中に引かれない。
+  ;; 普通の空白を画面の幅より多く並べ、はみ出た分は窓の端で切らせる。
+  ;; タブを出さないバッファでは LINE が nil で、そのときは何も足さない
+  (when line
+    (append line (list (propertize (make-string 400 ?\s)
+                                   'face 'centaur-tabs-unselected)))))
+
+(defun i999rri/centaur-tabs-match-icon (fn tab face selected)
+  "FN が作った TAB のアイコンを、FACE の文字と同じ色と下線にする。"
+  ;; centaur-tabs はアイコンに自前の色と下線を付ける。単色にする設定
+  ;; (centaur-tabs-plain-icons) は、どのタブのアイコンも選択中のタブの文字色で
+  ;; 塗る。選択中の文字を黒にしているため、選択中以外のタブではアイコンが背景に
+  ;; 溶ける。下線も centaur-tabs 自身の印を下線にしたときしか付かず、アクセントの
+  ;; 線がアイコンの所だけ途切れる。
+  (let ((icon (funcall fn tab face selected)))
+    (when (and (stringp icon) (> (length icon) 0))
+      ;; 先頭に足した指定が、centaur-tabs の付けた指定より優先される
+      (add-face-text-property 0 (length icon)
+                              `( :foreground ,(face-foreground face nil 'default)
+                                 :underline ,(face-attribute face :underline nil 'default))
+                              nil icon))
+    icon))
+
+(use-package centaur-tabs
+  ;; :bind だけだとキーを押すまで読み込まれず、:config のモードも有効にならない
+  :demand t
+  :custom
+  (centaur-tabs-style "bar")
+  (centaur-tabs-height 32)              ; 15pt の 1 文字 (26px) に上下の余白を足す
+  (centaur-tabs-set-icons t)
+  (centaur-tabs-icon-type 'nerd-icons)  ; doom-modeline と同じアイコン
+  ;; 選択中のタブは塗りで示すため、centaur-tabs 自身の印 (下線や縦棒) は出さない
+  (centaur-tabs-set-bar nil)
+  (centaur-tabs-set-modified-marker t)
+  (centaur-tabs-modified-marker "●")
+  (centaur-tabs-show-new-tab-button nil)
+  ;; 切り替えは今のプロジェクトの中だけで回す。別のプロジェクトへは tab-bar で移る
+  (centaur-tabs-cycle-scope 'tabs)
+  ;; dashboard にはタブを出さない。起動直後の画面に中身の無い帯が載るだけになる。
+  ;; 残りは centaur-tabs の既定値で、読み込み時に一度だけ使われるため先に決めておく
+  (centaur-tabs-hide-tabs-hooks '(magit-status-mode-hook
+                                  magit-popup-mode-hook
+                                  reb-mode-hook
+                                  completion-list-mode-hook
+                                  dashboard-mode-hook))
+  :init
+  ;; 下線をフォントのベースラインではなく、行の下端 (descent) に引く。
+  ;; タブの段の下のアクセントの線が、文字の下ではなく段の下端に来る。
+  ;; 全体の設定なので、リンクなどの下線も同じ位置に下がる
+  (setq x-underline-at-descent-line t)
+  ;; Ctrl+Tab はプロジェクトの中で開いているファイルのタブを回す。上の段のプロジェクト
+  ;; のタブは帯ごと隠しているため、そちらには割り当てない。tab-bar-mode は C-<tab> が
+  ;; 空いているときだけ tab-next を置くので、ここで割り当てれば上書きされない。
+  ;; magit の画面では magit 自身の C-<tab> (セクションの開閉) が優先される
+  :bind (("C-<tab>"   . centaur-tabs-forward)
+         ("C-S-<tab>" . centaur-tabs-backward)
+         ("C-<prior>" . centaur-tabs-backward)   ; Ctrl+PageUp
+         ("C-<next>"  . centaur-tabs-forward))   ; Ctrl+PageDown
+  :config
+  ;; 組分けの関数は defcustom ではなく defvar なので、:custom では入らない
+  (setq centaur-tabs-buffer-groups-function #'i999rri/centaur-tabs-group)
+  ;; centaur-tabs-line は組み立てた行を覚えて使い回すため、組み立てる関数ではなく
+  ;; 毎回呼ばれるこちらの戻り値に足す
+  (advice-add 'centaur-tabs-line :filter-return #'i999rri/centaur-tabs-accent-line)
+  ;; アイコンはタブの文字と同じ色にする。種類ごとの色のままだと、塗った選択中の
+  ;; タブの上で読めないものがある
+  (advice-add 'centaur-tabs-icon :around #'i999rri/centaur-tabs-match-icon)
+  (centaur-tabs-mode 1))
+
+;;; ---------------------------------------------------------------------------
+;;; サーバー (どこから開いても 1 つのフレームに集める)
+;;; ---------------------------------------------------------------------------
+
+;; Explorer・スタートメニュー・ターミナルからは emacsclientw -r で開く。-c と違い、
+;; フレームがあればそれを使う。登録は .config/dotfiles/windows/emacs-client.ps1。
+;;
+;; runemacs で直接起動した場合もクライアントを受け付けるようにする。daemon では
+;; 起動処理がこの後でサーバーを立てるため、ここでは触らない。
+(require 'server)
+(unless (or (daemonp) (server-running-p))
+  (server-start))
+
+;;; ---------------------------------------------------------------------------
+;;; プロジェクトのタブへの振り分け
+;;; ---------------------------------------------------------------------------
+
+;; バッファは、それが属するプロジェクトのタブに表示する。C-x C-f・C-x b・dired・
+;; xref のジャンプ・emacsclient と、開き方によらず同じ規則にする。
+;;
+;; 表示先を決める共通の口である display-buffer-alist に入れている。コマンドごとに
+;; 手を入れると、対象から漏れたものだけ規則が崩れる。
+
+;; プロジェクトの判定結果は、バッファごとに作業ディレクトリと組にして覚えておく。
+;; centaur-tabs はタブを描き直すたびに全バッファの所属を問い合わせる。
+;; project-current はプロジェクトの外だと根まで遡って 3ms 近くかかり、負の結果を
+;; 覚えないため、開いているファイルの数だけ描画が遅くなる。
+(defvar-local i999rri--project-root-cache nil
+  "(default-directory . プロジェクトのルート) の組。")
+
+(defun i999rri/buffer-project-root (buffer)
+  "BUFFER が属するプロジェクトのルート。裏方かプロジェクトの外なら nil。"
+  ;; 先頭が空白のものはミニバッファなどの内部用で、* と同じく裏方として扱う
+  (unless (string-match-p "\\`[ *]" (buffer-name buffer))
+    (with-current-buffer buffer
+      (if (equal (car i999rri--project-root-cache) default-directory)
+          (cdr i999rri--project-root-cache)
+        (let ((root (when-let* ((p (project-current nil)))
+                      (project-root p))))
+          (setq i999rri--project-root-cache (cons default-directory root))
+          root)))))
+
+;; タブがどのプロジェクトのものかは、タブ自身に覚えさせる。表示中のバッファから
+;; 毎回求めると、*eat* や *Messages* を覗いている間だけプロジェクトから外れて
+;; しまう。タブに足した独自の値は、tab-bar が切り替えのたびに引き継ぐ。
+(defun i999rri/tab-project ()
+  "選択中のタブが覚えているプロジェクトのルート。"
+  (alist-get 'i999rri-project (cdr (tab-bar--current-tab-find))))
+
+(defun i999rri/tab-set-project (root &optional frame)
+  "FRAME の選択中のタブに、ROOT のプロジェクトを覚えさせる。"
+  (setf (alist-get 'i999rri-project (cdr (tab-bar--current-tab-find nil frame)))
+        root))
+
+(defun i999rri/tab-remember-project (frame)
+  "FRAME の選択中のタブに、いま見ているプロジェクトを覚えさせる。"
+  (when-let* ((window (frame-selected-window frame))
+              ((not (window-minibuffer-p window)))
+              (root (i999rri/buffer-project-root (window-buffer window))))
+    (i999rri/tab-set-project root frame)))
+
+;; バッファを替えたときと、分割した窓の間を移ったとき
+(add-hook 'window-buffer-change-functions #'i999rri/tab-remember-project)
+(add-hook 'window-selection-change-functions #'i999rri/tab-remember-project)
+
+(defun i999rri/select-project-tab (root)
+  "ROOT のプロジェクトを覚えているタブへ移る。無ければタブを作る。"
+  (let ((index (seq-position (funcall tab-bar-tabs-function) root
+                             (lambda (tab root)
+                               (when-let* ((r (alist-get 'i999rri-project tab)))
+                                 (file-equal-p r root)))))
+        (dashboard-only (seq-every-p
+                         (lambda (w)
+                           (eq (buffer-local-value 'major-mode (window-buffer w))
+                               'dashboard-mode))
+                         (window-list nil 'no-minibuf))))
+    (cond (index
+           (tab-bar-select-tab (1+ index)))
+          ;; 起動直後や C-x t 2 で作った、dashboard しか無いタブはそのまま使う
+          ((not dashboard-only)
+           (tab-bar-new-tab))))
+  ;; 移った先で覚えさせるのはフックに任せず、ここで済ませる。フックは再描画まで
+  ;; 走らないため、1 つのコマンドの中で同じプロジェクトを続けて表示すると、
+  ;; 覚える前のタブが見つからずにタブをもう 1 つ作ってしまう
+  (i999rri/tab-set-project root))
+
+(defun i999rri/other-project-buffer-p (buffer-or-name &rest _)
+  "BUFFER-OR-NAME が、選択中のタブとは別のプロジェクトに属していれば non-nil。"
+  ;; consult は候補を選んでいる間もバッファを表示して見せる。そこで振り分けると、
+  ;; 候補を送るたびにタブが切り替わる。ミニバッファを抜けた後の表示だけを扱う
+  (and (not (active-minibuffer-window))
+       (when-let* ((buffer (get-buffer buffer-or-name))
+                   (root (i999rri/buffer-project-root buffer)))
+         (not (and (i999rri/tab-project)
+                   (file-equal-p (i999rri/tab-project) root))))))
+
+(defun i999rri/display-buffer-in-project-tab (buffer _alist)
+  "BUFFER のプロジェクトのタブへ移る。表示そのものは行わず nil を返す。"
+  ;; nil を返すと、display-buffer は続けて呼び出し元が指定した出し方を試す。
+  ;; 移った先のタブで、同じ窓か別の窓かという元の指定どおりに表示される
+  (i999rri/select-project-tab (i999rri/buffer-project-root buffer))
+  nil)
+
+(add-to-list 'display-buffer-alist
+             '(i999rri/other-project-buffer-p
+               (i999rri/display-buffer-in-project-tab)))
+
+;; C-x C-f や C-x b が使う switch-to-buffer は、既定では display-buffer-alist を
+;; 見ずに今の窓へ直接表示する。emacsclient から開いたときもここを通る
+(setq switch-to-buffer-obey-display-actions t)
 
 ;;; ---------------------------------------------------------------------------
 ;;; 後始末
