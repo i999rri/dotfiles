@@ -865,6 +865,41 @@
              (project-name p)))
       (tab-bar-tab-name-current)))
 
+(defun i999rri/tab-bar-format-icon (name tab _i)
+  "NAME の前に、TAB の中身を表すアイコンを付ける。"
+  ;; 下の段の centaur-tabs がファイルの種類のアイコンを出すのに揃える。
+  ;; プロジェクトかどうかは、振り分けがタブに覚えさせている値で見る
+  (if (not (fboundp 'nerd-icons-octicon))
+      name
+    (concat (nerd-icons-octicon
+             (cond ((alist-get 'i999rri-project tab) "nf-oct-repo")
+                   ((equal (alist-get 'name tab) (bound-and-true-p dashboard-buffer-name))
+                    "nf-oct-home")
+                   (t "nf-oct-file")))
+            " " name)))
+
+;; タブの段の下に、横いっぱいのアクセントの線を引く。Visual Studio (2019 まで) の
+;; ドキュメントタブの形で、塗った選択中のタブと編集画面がこの線でつながって見える。
+;;
+;; 線は選択中以外のタブに付けた下線で描く。下線は文字のある所にしか引かれない
+;; ため、最後のタブから右端までを幅だけの空白で埋め、同じ face で下線を続ける。
+(defun i999rri/tab-bar-format-accent-line ()
+  "最後のタブから帯の右端までを、選択中以外のタブと同じ下線で埋める。"
+  `((accent-line menu-item
+                 ,(propertize " " 'display '(space :align-to right)
+                              'face 'tab-bar-tab-inactive)
+                 ignore)))
+
+;; 閉じるボタンは、下の段の centaur-tabs と同じ文字の × にする。
+;; 既定のボタンは tab-bar-mode を有効にするたびにアイコン (tab-bar-close) から
+;; 作り直され、そのとき画像が使えれば画像、使えなければ " x" の文字になる。
+;; daemon は GUI の無い状態で有効にするため、起動の仕方で見た目が変わる。
+;; モードの本体がボタンを作った後に走るフックで、文字に置き換える。
+(defun i999rri/tab-bar-close-button-text ()
+  "tab-bar の閉じるボタンを文字の × にする。"
+  (setq tab-bar-close-button
+        (propertize " ×" 'close-tab t 'help-echo "Click to close tab")))
+
 (defun i999rri/tab-new-buffer ()
   "新しいタブに出すバッファ。閉じ切ったときの落ち先と同じ場所にする。"
   (or (i999rri/dashboard-buffer) (get-scratch-buffer-create)))
@@ -885,21 +920,31 @@
   ;; タブが 1 つでも帯を出す。隠すと、今いるタブも機能が入っていることも見えない
   (tab-bar-show t)
   (tab-bar-tab-hints t)               ; 番号を振る
-  ;; タブの間隔。背景のベタ塗りをやめたぶん、区切りが空白の幅だけになる。
-  ;; 既定は空白 1 つで、隣のタブの番号と続けて読めてしまう
-  (tab-bar-separator "   ")
-  ;; タブの幅の上限。auto-width は幅を揃えたうえで帯を埋めようと広げるため、
-  ;; タブが少ないとここまで伸びる。既定の 220px / 20 桁は、プロジェクト名を
-  ;; 出すには余る。下線を名前の幅に近づけたいので詰めている
-  (tab-bar-auto-width-max '((140) 12))
-  (tab-bar-close-button-show nil)     ; キーボードで閉じるのでボタンは要らない
+  ;; タブの間隔はテーマの枠 (左右 10px の余白) で取るため、区切りの文字は置かない
+  (tab-bar-separator "")
+  ;; タブの幅は名前に合わせる。auto-width は幅を揃えたうえで帯を埋めようと広げ、
+  ;; 選択中のタブの塗りも一緒に伸びる。下の段の centaur-tabs とも揃わない
+  (tab-bar-auto-width nil)
+  ;; 既定の並びの最後に、アクセントの線を右端まで延ばす項目を足す
+  (tab-bar-format '(tab-bar-format-history
+                    tab-bar-format-tabs
+                    tab-bar-separator
+                    tab-bar-format-add-tab
+                    i999rri/tab-bar-format-accent-line))
+  ;; 下の段の centaur-tabs と同じく、マウスでも閉じられるようにする
+  (tab-bar-close-button-show t)
   (tab-bar-new-button-show nil)
+  (tab-bar-tab-name-format-functions '(tab-bar-tab-name-format-hints
+                                       i999rri/tab-bar-format-icon
+                                       tab-bar-tab-name-format-close-button
+                                       tab-bar-tab-name-format-face))
   (tab-bar-new-tab-choice #'i999rri/tab-new-buffer)
   (tab-bar-select-restore-windows #'i999rri/tab-restore-killed-windows)
   (tab-bar-tab-name-function #'i999rri/tab-name)
   :bind (("C-<tab>"   . tab-next)
          ("C-S-<tab>" . tab-previous))
   :init
+  (add-hook 'tab-bar-mode-hook #'i999rri/tab-bar-close-button-text)
   (tab-bar-mode 1))
 
 ;;; ---------------------------------------------------------------------------
@@ -920,6 +965,32 @@
   (list (or (i999rri/buffer-project-root (current-buffer))
             (if (string-match-p "\\`[ *]" (buffer-name)) "Emacs" "Other"))))
 
+(defun i999rri/centaur-tabs-accent-line (line)
+  "centaur-tabs の LINE の後ろを、選択中以外のタブと同じ下線で右端まで埋める。"
+  ;; 上の tab-bar と同じ、横いっぱいのアクセントの線にする。
+  ;; tab-bar と違い、幅だけの空白 (space :align-to) では下線が段の中に引かれない。
+  ;; 普通の空白を画面の幅より多く並べ、はみ出た分は窓の端で切らせる。
+  ;; タブを出さないバッファでは LINE が nil で、そのときは何も足さない
+  (when line
+    (append line (list (propertize (make-string 400 ?\s)
+                                   'face 'centaur-tabs-unselected)))))
+
+(defun i999rri/centaur-tabs-match-icon (fn tab face selected)
+  "FN が作った TAB のアイコンを、FACE の文字と同じ色と下線にする。"
+  ;; centaur-tabs はアイコンに自前の色と下線を付ける。単色にする設定
+  ;; (centaur-tabs-plain-icons) は、どのタブのアイコンも選択中のタブの文字色で
+  ;; 塗る。選択中の文字を黒にしているため、選択中以外のタブではアイコンが背景に
+  ;; 溶ける。下線も centaur-tabs 自身の印を下線にしたときしか付かず、アクセントの
+  ;; 線がアイコンの所だけ途切れる。
+  (let ((icon (funcall fn tab face selected)))
+    (when (and (stringp icon) (> (length icon) 0))
+      ;; 先頭に足した指定が、centaur-tabs の付けた指定より優先される
+      (add-face-text-property 0 (length icon)
+                              `( :foreground ,(face-foreground face nil 'default)
+                                 :underline ,(face-attribute face :underline nil 'default))
+                              nil icon))
+    icon))
+
 (use-package centaur-tabs
   ;; :bind だけだとキーを押すまで読み込まれず、:config のモードも有効にならない
   :demand t
@@ -928,8 +999,8 @@
   (centaur-tabs-height 32)              ; 15pt の 1 文字 (26px) に上下の余白を足す
   (centaur-tabs-set-icons t)
   (centaur-tabs-icon-type 'nerd-icons)  ; doom-modeline と同じアイコン
-  ;; 選択中のタブは下線で示す。上の tab-bar と同じ示し方に揃える
-  (centaur-tabs-set-bar 'under)
+  ;; 選択中のタブは塗りで示すため、centaur-tabs 自身の印 (下線や縦棒) は出さない
+  (centaur-tabs-set-bar nil)
   (centaur-tabs-set-modified-marker t)
   (centaur-tabs-modified-marker "●")
   (centaur-tabs-show-new-tab-button nil)
@@ -944,14 +1015,20 @@
                                   dashboard-mode-hook))
   :init
   ;; 下線をフォントのベースラインではなく、行の下端 (descent) に引く。
-  ;; centaur-tabs の README が、選択中を下線で示すときはこれが必要だとしている。
-  ;; 全体の設定なので、リンクや tab-bar の下線も同じ位置に下がる
+  ;; タブの段の下のアクセントの線が、文字の下ではなく段の下端に来る。
+  ;; 全体の設定なので、リンクなどの下線も同じ位置に下がる
   (setq x-underline-at-descent-line t)
   :bind (("C-<prior>" . centaur-tabs-backward)   ; Ctrl+PageUp
          ("C-<next>"  . centaur-tabs-forward))   ; Ctrl+PageDown
   :config
   ;; 組分けの関数は defcustom ではなく defvar なので、:custom では入らない
   (setq centaur-tabs-buffer-groups-function #'i999rri/centaur-tabs-group)
+  ;; centaur-tabs-line は組み立てた行を覚えて使い回すため、組み立てる関数ではなく
+  ;; 毎回呼ばれるこちらの戻り値に足す
+  (advice-add 'centaur-tabs-line :filter-return #'i999rri/centaur-tabs-accent-line)
+  ;; アイコンはタブの文字と同じ色にする。種類ごとの色のままだと、塗った選択中の
+  ;; タブの上で読めないものがある
+  (advice-add 'centaur-tabs-icon :around #'i999rri/centaur-tabs-match-icon)
   (centaur-tabs-mode 1))
 
 ;;; ---------------------------------------------------------------------------
