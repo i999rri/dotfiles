@@ -103,6 +103,14 @@
 (setq display-line-numbers-type 'absolute)
 (global-display-line-numbers-mode 1)
 
+;; 行番号の欄は 4 桁ぶんを常に確保する。既定では画面に見えている行番号に合わせて
+;; 幅が決まるため、99 行目から 100 行目へスクロールしたときやファイルを切り替えた
+;; ときに、コードの始まる位置が横にずれる。
+;;
+;; 1 万行を超えて欄が広がった場合も、スクロールで戻ったときに縮めない。
+(setq-default display-line-numbers-width 4)
+(setq display-line-numbers-grow-only t)
+
 ;; nvim: vim.opt.cursorline = true
 (global-hl-line-mode 1)
 
