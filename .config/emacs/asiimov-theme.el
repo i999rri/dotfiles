@@ -85,10 +85,10 @@
    ;; プロポーショナルフォントで、指定しないとタブの外側がそのまま見える。
    ;; 色の付け方は上の tab-bar と同じ。
    ;;
-   ;; 段の高さは tab-line の枠の上下 2px で 30px にする (15pt の 1 文字が 26px)。
+   ;; 段の高さは tab-line の枠の上下 1px で 28px にする (15pt の 1 文字が 26px)。
    ;; urusi-emacs ではネイティブのタブがこの高さに収まり、色もこの face から取る。
    `(tab-line ((t (:inherit nil :foreground ,light-grey :background ,bg-or-none
-                   :box (:line-width (1 . 2) :style flat-button)))))
+                   :box (:line-width (1 . 1) :style flat-button)))))
    `(tab-line-tab          ((t (:inherit tab-line))))
    `(tab-line-tab-current  ((t (:foreground ,black :background ,orange))))
    `(tab-line-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
