@@ -59,3 +59,22 @@ function global:prompt {
     }
     & $global:_starshipPrompt
 }
+
+# Start WSL in the Linux home rather than mirroring the Windows working
+# directory. '~' stays quoted because PowerShell expands a bare ~ to the
+# Windows profile path before wsl.exe ever sees it, which lands the shell in
+# /mnt/c/Users/... instead.
+#
+# A native command inside a function does not inherit the pipeline, so piped
+# input is forwarded explicitly. The forward is conditional: handing wsl.exe an
+# empty $input closes stdin, and an interactive `wsl` would exit at once.
+#
+# Management subcommands (--shutdown, -l -v, ...) ignore the extra --cd, and an
+# explicit --cd later on the line wins, so neither needs a special case.
+function wsl {
+    if ($MyInvocation.ExpectingInput) {
+        $input | wsl.exe --cd '~' @args
+    } else {
+        wsl.exe --cd '~' @args
+    }
+}
