@@ -27,6 +27,10 @@
 (defvar i999rri-titlebar-project-lighten 8
   "プロジェクト名の札の背景を、バーの背景より何パーセント明るくするか。")
 
+(defvar i999rri-titlebar-project-gap (* 3 46)
+  "プロジェクト名の札とシステムボタンの間の空き (XAML の単位)。
+ボタン 1 つが幅 46 なので、3 つ並んだボタンの一組分空ける。")
+
 (defun i999rri-titlebar--color (attribute frame)
   "FRAME での `i999rri-titlebar' の ATTRIBUTE の色を XAML の形で返す。"
   (urusi-screen-color (face-attribute 'i999rri-titlebar attribute frame t)))
@@ -60,7 +64,7 @@
     `(Rows :key "i999rri-titlebar-project" :panel "StackPanel"
            :Grid.Column 1
            :VerticalAlignment "Center"
-           :Margin "0,0,8,0"
+           :Margin ,(format "0,0,%s,0" i999rri-titlebar-project-gap)
            ,@(when name
                `((Border :key "project"
                          :CornerRadius 4
