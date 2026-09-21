@@ -88,7 +88,7 @@
    ;; 段の高さは tab-line の枠の上下 3px で、上の tab-bar と同じ 32px にする。
    ;; urusi-emacs ではネイティブのタブがこの高さに収まり、色もこの face から取る。
    `(tab-line ((t (:inherit nil :foreground ,light-grey :background ,bg-or-none
-                   :box (:line-width (0 . 3) :style flat-button)))))
+                   :box (:line-width (1 . 3) :style flat-button)))))
    `(tab-line-tab          ((t (:inherit tab-line))))
    `(tab-line-tab-current  ((t (:foreground ,black :background ,orange))))
    `(tab-line-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
