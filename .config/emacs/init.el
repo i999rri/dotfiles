@@ -227,6 +227,14 @@
 (advice-add 'switch-to-prev-buffer :after #'i999rri/fall-back-to-dashboard)
 (advice-add 'switch-to-next-buffer :after #'i999rri/fall-back-to-dashboard)
 
+;; ファイルの文字コードは UTF-8 にそろえる。Windows の既定は Shift_JIS で、ASCII
+;; だけのファイルに日本語を足して保存すると Shift_JIS で書かれる。
+;;
+;; ファイルに関わるところだけ変える。prefer-coding-system はプロセスとの
+;; やりとりまで UTF-8 にし、コンソールのコードページで出力するコマンドが化ける
+(set-coding-system-priority 'utf-8)
+(setq-default buffer-file-coding-system 'utf-8-unix)
+
 ;; バックアップと自動保存を一箇所に集める。既定では編集中のファイルの隣に
 ;; 散らかるため、git の作業ツリーが汚れる。
 (let ((dir (expand-file-name "var/" user-emacs-directory)))
