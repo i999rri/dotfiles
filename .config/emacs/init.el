@@ -367,6 +367,14 @@
 (add-to-list 'custom-theme-load-path i999rri/config-directory)
 (load-theme 'asiimov t)
 
+;; 自分で書いた Emacs Lisp は lisp/ に分けて置き、ここから require する。
+(add-to-list 'load-path (expand-file-name "lisp" i999rri/config-directory))
+
+;; urusi-emacs の中で動いているときの画面 (タイトルバーなど)。
+;; 普通の Emacs には urusi がないので読まない。
+(when (featurep 'urusi)
+  (require 'i999rri-urusi))
+
 (use-package which-key
   :ensure nil                           ; Emacs 30 に同梱
   :init (which-key-mode 1)
