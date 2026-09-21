@@ -1106,7 +1106,7 @@
 
 (defun i999rri/tab-bar-format-icon (name tab _i)
   "NAME の前に、TAB の中身を表すアイコンを付ける。"
-  ;; 下の段の centaur-tabs がファイルの種類のアイコンを出すのに揃える。
+  ;; 下の段のファイルのタブ がファイルの種類のアイコンを出すのに揃える。
   ;; プロジェクトかどうかは、振り分けがタブに覚えさせている値で見る
   (if (not (fboundp 'nerd-icons-octicon))
       name
@@ -1129,7 +1129,7 @@
                               'face 'tab-bar-tab-inactive)
                  ignore)))
 
-;; 閉じるボタンは、下の段の centaur-tabs と同じ文字の × にする。
+;; 閉じるボタンは、下の段のファイルのタブ と同じ文字の × にする。
 ;; 既定のボタンは tab-bar-mode を有効にするたびにアイコン (tab-bar-close) から
 ;; 作り直され、そのとき画像が使えれば画像、使えなければ " x" の文字になる。
 ;; daemon は GUI の無い状態で有効にするため、起動の仕方で見た目が変わる。
@@ -1167,7 +1167,7 @@
   ;; タブの間隔はテーマの枠 (左右 10px の余白) で取るため、区切りの文字は置かない
   (tab-bar-separator "")
   ;; タブの幅は名前に合わせる。auto-width は幅を揃えたうえで帯を埋めようと広げ、
-  ;; 選択中のタブの塗りも一緒に伸びる。下の段の centaur-tabs とも揃わない
+  ;; 選択中のタブの塗りも一緒に伸びる。下の段のファイルのタブ とも揃わない
   (tab-bar-auto-width nil)
   ;; 既定の並びの最後に、アクセントの線を右端まで延ばす項目を足す
   (tab-bar-format '(tab-bar-format-history
@@ -1175,7 +1175,7 @@
                     tab-bar-separator
                     tab-bar-format-add-tab
                     i999rri/tab-bar-format-accent-line))
-  ;; 下の段の centaur-tabs と同じく、マウスでも閉じられるようにする
+  ;; 下の段のファイルのタブ と同じく、マウスでも閉じられるようにする
   (tab-bar-close-button-show t)
   (tab-bar-new-button-show nil)
   (tab-bar-tab-name-format-functions '(tab-bar-tab-name-format-hints
@@ -1190,94 +1190,77 @@
   (tab-bar-mode 1))
 
 ;;; ---------------------------------------------------------------------------
-;;; ファイルのタブ (centaur-tabs)
+;;; ファイルのタブ (tab-line)
 ;;; ---------------------------------------------------------------------------
 
 ;; 上の tab-bar がプロジェクトを並べ、その下の段にいま見ているプロジェクトの
 ;; バッファを並べる。Visual Studio のドキュメントタブのように、マウスで切り替えたり
 ;; 閉じたりできる。
 ;;
-;; 描く場所は各窓の tab-line で、header-line は使わない。
+;; 描く場所は各窓の tab-line で、header-line は使わない。どのバッファを並べるかは
+;; ここで決め、見た目は描く側に任せる。普通の Emacs では tab-line がそのまま文字で
+;; 描き、urusi-emacs ではネイティブのタブで描く (lisp/i999rri-tabs.el)。
 
-(defun i999rri/centaur-tabs-group ()
-  "今のバッファを並べるタブの組。プロジェクトのタブへの振り分けと同じ基準で分ける。"
-  ;; 基準を振り分けと揃えるため、centaur-tabs 既定の分け方は使わない。既定では
-  ;; *eat* のような裏方もプロジェクト名で束ねるが、振り分けはそれを今のタブに
-  ;; 残すので、並ぶタブと居るタブの所属が食い違う。
-  (list (or (i999rri/buffer-project-root (current-buffer))
-            (if (string-match-p "\\`[ *]" (buffer-name)) "Emacs" "Other"))))
+(defun i999rri/tab-group (buffer)
+  "BUFFER を並べるタブの組。プロジェクトのタブへの振り分けと同じ基準で分ける。"
+  ;; 基準を振り分けと揃える。裏方をプロジェクト名で束ねると、振り分けはそれを
+  ;; 今のタブに残すので、並ぶタブと居るタブの所属が食い違う。
+  (or (i999rri/buffer-project-root buffer)
+      (if (string-match-p "\\`[ *]" (buffer-name buffer)) "Emacs" "Other")))
 
-(defun i999rri/centaur-tabs-accent-line (line)
-  "centaur-tabs の LINE の後ろを、選択中以外のタブと同じ下線で右端まで埋める。"
-  ;; 上の tab-bar と同じ、横いっぱいのアクセントの線にする。
-  ;; tab-bar と違い、幅だけの空白 (space :align-to) では下線が段の中に引かれない。
-  ;; 普通の空白を画面の幅より多く並べ、はみ出た分は窓の端で切らせる。
-  ;; タブを出さないバッファでは LINE が nil で、そのときは何も足さない
-  (when line
-    (append line (list (propertize (make-string 400 ?\s)
-                                   'face 'centaur-tabs-unselected)))))
+(defvar i999rri--tab-serial 0
+  "最後にタブの並び順を振った番号。")
 
-(defun i999rri/centaur-tabs-match-icon (fn tab face selected)
-  "FN が作った TAB のアイコンを、FACE の文字と同じ色と下線にする。"
-  ;; centaur-tabs はアイコンに自前の色と下線を付ける。単色にする設定
-  ;; (centaur-tabs-plain-icons) は、どのタブのアイコンも選択中のタブの文字色で
-  ;; 塗る。選択中の文字を黒にしているため、選択中以外のタブではアイコンが背景に
-  ;; 溶ける。下線も centaur-tabs 自身の印を下線にしたときしか付かず、アクセントの
-  ;; 線がアイコンの所だけ途切れる。
-  (let ((icon (funcall fn tab face selected)))
-    (when (and (stringp icon) (> (length icon) 0))
-      ;; 先頭に足した指定が、centaur-tabs の付けた指定より優先される
-      (add-face-text-property 0 (length icon)
-                              `( :foreground ,(face-foreground face nil 'default)
-                                 :underline ,(face-attribute face :underline nil 'default))
-                              nil icon))
-    icon))
+(defvar-local i999rri--tab-order nil
+  "このバッファがタブに初めて並んだ順番。")
 
-(use-package centaur-tabs
-  ;; :bind だけだとキーを押すまで読み込まれず、:config のモードも有効にならない
-  :demand t
+(defun i999rri/tab-order (buffer)
+  "BUFFER のタブの並び順。初めて聞かれたときに振る。"
+  ;; buffer-list の順は切り替えるたびに入れ替わる。そのまま並べると、選んだ
+  ;; タブが先頭へ跳ねる。開いた順に固定する
+  (with-current-buffer buffer
+    (or i999rri--tab-order
+        (setq i999rri--tab-order (cl-incf i999rri--tab-serial)))))
+
+(defun i999rri/tab-line-tabs ()
+  "今のバッファと同じ組のバッファを、開いた順に並べる。"
+  (let ((group (i999rri/tab-group (current-buffer))))
+    (sort (seq-filter (lambda (buffer)
+                        (and (not (string-prefix-p " " (buffer-name buffer)))
+                             (equal (i999rri/tab-group buffer) group)))
+                      (buffer-list))
+          (lambda (a b) (< (i999rri/tab-order a) (i999rri/tab-order b))))))
+
+(defun i999rri/tab-line-tab-name (buffer &optional _buffers)
+  "タブの名前。保存していないファイルには ● を付ける。"
+  (concat (buffer-name buffer)
+          (when (and (buffer-file-name buffer) (buffer-modified-p buffer))
+            " ●")))
+
+(use-package tab-line
+  :ensure nil
   :custom
-  (centaur-tabs-style "bar")
-  (centaur-tabs-height 32)              ; 15pt の 1 文字 (26px) に上下の余白を足す
-  (centaur-tabs-set-icons t)
-  (centaur-tabs-icon-type 'nerd-icons)  ; doom-modeline と同じアイコン
-  ;; 選択中のタブは塗りで示すため、centaur-tabs 自身の印 (下線や縦棒) は出さない
-  (centaur-tabs-set-bar nil)
-  (centaur-tabs-set-modified-marker t)
-  (centaur-tabs-modified-marker "●")
-  (centaur-tabs-show-new-tab-button nil)
-  ;; 切り替えは今のプロジェクトの中だけで回す。別のプロジェクトへは tab-bar で移る
-  (centaur-tabs-cycle-scope 'tabs)
-  ;; dashboard にはタブを出さない。起動直後の画面に中身の無い帯が載るだけになる。
-  ;; 残りは centaur-tabs の既定値で、読み込み時に一度だけ使われるため先に決めておく
-  (centaur-tabs-hide-tabs-hooks '(magit-status-mode-hook
-                                  magit-popup-mode-hook
-                                  reb-mode-hook
-                                  completion-list-mode-hook
-                                  dashboard-mode-hook))
-  :init
-  ;; 下線をフォントのベースラインではなく、行の下端 (descent) に引く。
-  ;; タブの段の下のアクセントの線が、文字の下ではなく段の下端に来る。
-  ;; 全体の設定なので、リンクなどの下線も同じ位置に下がる
-  (setq x-underline-at-descent-line t)
+  (tab-line-tabs-function #'i999rri/tab-line-tabs)
+  (tab-line-tab-name-function #'i999rri/tab-line-tab-name)
+  (tab-line-new-button-show nil)
+  ;; 閉じるとバッファごと消す。VS のタブと同じく、閉じたものは一覧から消える
+  (tab-line-close-tab-function #'kill-buffer)
+  ;; ファイルを開く前の画面や、画面全体を使うものにはタブを出さない
+  (tab-line-exclude-modes '(completion-list-mode
+                            dashboard-mode
+                            magit-status-mode
+                            magit-popup-mode
+                            reb-mode))
   ;; Ctrl+Tab はプロジェクトの中で開いているファイルのタブを回す。上の段のプロジェクト
   ;; のタブは帯ごと隠しているため、そちらには割り当てない。tab-bar-mode は C-<tab> が
   ;; 空いているときだけ tab-next を置くので、ここで割り当てれば上書きされない。
   ;; magit の画面では magit 自身の C-<tab> (セクションの開閉) が優先される
-  :bind (("C-<tab>"   . centaur-tabs-forward)
-         ("C-S-<tab>" . centaur-tabs-backward)
-         ("C-<prior>" . centaur-tabs-backward)   ; Ctrl+PageUp
-         ("C-<next>"  . centaur-tabs-forward))   ; Ctrl+PageDown
+  :bind (("C-<tab>"   . tab-line-switch-to-next-tab)
+         ("C-S-<tab>" . tab-line-switch-to-prev-tab)
+         ("C-<prior>" . tab-line-switch-to-prev-tab)   ; Ctrl+PageUp
+         ("C-<next>"  . tab-line-switch-to-next-tab))  ; Ctrl+PageDown
   :config
-  ;; 組分けの関数は defcustom ではなく defvar なので、:custom では入らない
-  (setq centaur-tabs-buffer-groups-function #'i999rri/centaur-tabs-group)
-  ;; centaur-tabs-line は組み立てた行を覚えて使い回すため、組み立てる関数ではなく
-  ;; 毎回呼ばれるこちらの戻り値に足す
-  (advice-add 'centaur-tabs-line :filter-return #'i999rri/centaur-tabs-accent-line)
-  ;; アイコンはタブの文字と同じ色にする。種類ごとの色のままだと、塗った選択中の
-  ;; タブの上で読めないものがある
-  (advice-add 'centaur-tabs-icon :around #'i999rri/centaur-tabs-match-icon)
-  (centaur-tabs-mode 1))
+  (global-tab-line-mode 1))
 
 ;;; ---------------------------------------------------------------------------
 ;;; サーバー (どこから開いても 1 つのフレームに集める)
@@ -1303,7 +1286,7 @@
 ;; 手を入れると、対象から漏れたものだけ規則が崩れる。
 
 ;; プロジェクトの判定結果は、バッファごとに作業ディレクトリと組にして覚えておく。
-;; centaur-tabs はタブを描き直すたびに全バッファの所属を問い合わせる。
+;; ファイルのタブは描き直すたびに全バッファの所属を問い合わせる。
 ;; project-current はプロジェクトの外だと根まで遡って 3ms 近くかかり、負の結果を
 ;; 覚えないため、開いているファイルの数だけ描画が遅くなる。
 (defvar-local i999rri--project-root-cache nil
