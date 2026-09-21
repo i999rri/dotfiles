@@ -108,6 +108,11 @@
    `(mode-line-inactive ((t (:foreground ,grey  :background ,dark-grey))))
    `(mode-line-buffer-id ((t ())))
 
+   ;; 窓どうしの区切り線 (window-divider-mode)。モードラインを出さないときの境目
+   `(window-divider             ((t (:foreground ,dark-grey))))
+   `(window-divider-first-pixel ((t (:foreground ,dark-grey))))
+   `(window-divider-last-pixel  ((t (:foreground ,dark-grey))))
+
    ;; 補完のポップアップ (nvim の Pmenu)
    `(corfu-default    ((t (:foreground ,fg    :background ,dark-grey))))
    `(corfu-current    ((t (:foreground ,black :background ,orange))))
