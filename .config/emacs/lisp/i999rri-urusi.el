@@ -22,10 +22,12 @@
 (require 'i999rri-child-frame)
 (require 'i999rri-layout)
 (require 'i999rri-tabs)
+(require 'i999rri-statusbar)
 
 (setq urusi-screen-components
       '(i999rri-titlebar
-        urusi-layout-component))
+        urusi-layout-component
+        i999rri-statusbar))
 
 ;; 子フレーム (浮かぶ入力欄、補完のポップアップ) に影と角丸を付ける。
 (setq urusi-screen-child-frame-function #'i999rri-child-frame)
