@@ -23,6 +23,20 @@
   "FACE の ATTRIBUTE の色を XAML の形で返す。"
   (urusi-screen-color (face-attribute face attribute nil t)))
 
+(defun i999rri-tabs-icon (tab)
+  "TAB のバッファの種類のアイコン (nerd-icons)。色はタブの文字と同じにする。"
+  ;; 種類ごとの色のままだと、オレンジに塗った選択中のタブの上で読めないものがある。
+  ;; 形だけ借り、色は描く側でタブの文字の色にしてもらう
+  (let ((buffer (let ((tab (plist-get tab :tab)))
+                  (if (bufferp tab) tab (alist-get 'buffer tab)))))
+    (when (and (buffer-live-p buffer) (require 'nerd-icons nil t))
+      (let ((icon (with-current-buffer buffer (nerd-icons-icon-for-buffer))))
+        (when (and (stringp icon) (< 0 (length icon)))
+          (propertize (substring-no-properties icon)
+                      'face `(:family ,nerd-icons-font-family)))))))
+
+(setq urusi-tabs-icon-function #'i999rri-tabs-icon)
+
 (defun i999rri-tab-line (window _line)
   "WINDOW のファイルのタブを、下にアクセントの線を引いた段として返す。"
   `(Border :BorderBrush ,(or (i999rri-tabs--color 'tab-line-tab-current :background)
