@@ -5,15 +5,14 @@
 ;; urusi-emacs の窓を、上の Emacs 本体と下の出力パネルに分ける。
 ;;
 ;; 出力パネルはふだん隠しておき、M-x compile の出力 (*compilation*) を
-;; 出すときに開く。C-c o で開け閉めでき、パネルの中では q で閉じる。
+;; 出すときに開く。C-c o で開け閉めできる。パネルの中の q (quit-window) で
+;; 閉じるのは urusi-emacs 側の動き。
 ;; パネルの中身は Emacs のフレームなので、出力はふつうのバッファとして
 ;; 読める (エラーの行から飛ぶなど)。
 
 ;;; Code:
 
 (require 'urusi-layout)
-
-(defvar compilation-mode-map)
 
 (setq urusi-layout
       '(column
@@ -42,17 +41,7 @@
   (interactive)
   (urusi-layout-toggle 'output))
 
-(defun i999rri-layout-quit ()
-  "出力パネルの中なら出力パネルを閉じる。それ以外ではふつうの q。"
-  (interactive)
-  (if (frame-parameter (selected-frame) 'urusi-panel)
-      (urusi-layout-hide 'output)
-    (quit-window)))
-
 (keymap-global-set "C-c o" #'i999rri-layout-toggle-output)
-
-(with-eval-after-load 'compile
-  (keymap-set compilation-mode-map "q" #'i999rri-layout-quit))
 
 (provide 'i999rri-layout)
 ;;; i999rri-layout.el ends here
