@@ -1257,7 +1257,7 @@
 
 (defun i999rri/tab-line-tab-name (buffer &optional _buffers)
   "タブの名前。保存していないファイルには、Visual Studio と同じく名前の後ろに * を付ける。"
-  ;; 記号 (●) を離して置くと、名前の文字より大きく目立つ
+  ;; ● の印は見慣れない大きさで浮いて見える。見慣れた形にそろえる
   (concat (buffer-name buffer)
           (when (and (buffer-file-name buffer) (buffer-modified-p buffer))
             "*")))
