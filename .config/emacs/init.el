@@ -1163,6 +1163,10 @@
   ;; 何でも検索 (C-c SPC の p) から行う。見た目の設定 (テーマの face、アイコン、
   ;; 閉じるボタン、アクセントの線) は、t に戻せば帯がそのまま出るよう残してある
   (tab-bar-show nil)
+  ;; tab-bar-mode は自分のキーマップに C-<tab> (tab-next) を置き、全体の割り当て
+  ;; より優先される。Ctrl+Tab は下の段のファイルのタブに使うため、tab-bar には
+  ;; 番号でタブを選ぶキーだけを置かせる
+  (tab-bar-define-keys 'numeric)
   (tab-bar-tab-hints t)               ; 番号を振る
   ;; タブの間隔はテーマの枠 (左右 10px の余白) で取るため、区切りの文字は置かない
   (tab-bar-separator "")
@@ -1254,8 +1258,8 @@
                             magit-popup-mode
                             reb-mode))
   ;; Ctrl+Tab はプロジェクトの中で開いているファイルのタブを回す。上の段のプロジェクト
-  ;; のタブは帯ごと隠しているため、そちらには割り当てない。tab-bar-mode は C-<tab> が
-  ;; 空いているときだけ tab-next を置くので、ここで割り当てれば上書きされない。
+  ;; のタブは帯ごと隠しているため、そちらには割り当てない (tab-bar 側は
+  ;; tab-bar-define-keys で C-<tab> を置かせない)。
   ;; magit の画面では magit 自身の C-<tab> (セクションの開閉) が優先される
   :bind (("C-<tab>"   . tab-line-switch-to-next-tab)
          ("C-S-<tab>" . tab-line-switch-to-prev-tab)
