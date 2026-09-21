@@ -57,7 +57,7 @@
    `(vertical-border  ((t (:foreground ,dark-grey))))
    `(fill-column-indicator ((t (:foreground ,dark-grey))))
 
-   ;; タブ (tab-bar と、その下の段の centaur-tabs)
+   ;; タブ (tab-bar と、その下の段のファイルのタブ)
    ;;
    ;; Visual Studio (2019 まで) のドキュメントタブの形にする。選択中のタブはオレンジで
    ;; 塗って黒い文字にし、段の下にオレンジの線を横いっぱいに引く。塗ったタブと編集画面が
@@ -67,7 +67,7 @@
    ;; accent-line)。選択中のタブは同じ色で塗っているため、下線が無くても線は途切れない。
    ;;
    ;; tab-bar の枠 (flat-button) は背景と同じ色で描かれ、文字の周りの余白になる。
-   ;; 上下の 3px で、centaur-tabs の段と同じ 32px の高さにする (15pt の 1 文字が 26px)。
+   ;; 上下の 3px で、ファイルのタブの段と同じ 32px の高さにする (15pt の 1 文字が 26px)。
    ;;
    ;; 帯そのものの背景は編集領域と揃え、塗るのは選択中のタブだけにする。
    `(tab-bar          ((t (:foreground ,light-grey :background ,bg-or-none))))
@@ -81,25 +81,18 @@
    `(tab-bar-tab-group-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
    `(tab-bar-tab-ungrouped      ((t (:foreground ,light-grey :background ,bg-or-none))))
 
-   ;; centaur-tabs は tab-line に描く。tab-line の既定は明るい灰色の背景に
+   ;; 下の段のファイルのタブ (tab-line)。tab-line の既定は明るい灰色の背景に
    ;; プロポーショナルフォントで、指定しないとタブの外側がそのまま見える。
    ;; 色の付け方は上の tab-bar と同じ。
-   `(tab-line ((t (:inherit nil :foreground ,light-grey :background ,bg-or-none))))
-   `(centaur-tabs-default    ((t (:foreground ,light-grey :background ,bg-or-none
-                                  :underline (:color ,orange)))))
-   `(centaur-tabs-unselected ((t (:foreground ,light-grey :background ,bg-or-none
-                                  :underline (:color ,orange)))))
-   `(centaur-tabs-selected   ((t (:foreground ,black :background ,orange))))
-   `(centaur-tabs-unselected-modified ((t (:foreground ,light-grey :background ,bg-or-none
-                                           :underline (:color ,orange)))))
-   `(centaur-tabs-selected-modified   ((t (:foreground ,black :background ,orange))))
-   `(centaur-tabs-close-unselected ((t (:foreground ,light-grey :background ,bg-or-none
-                                        :underline (:color ,orange)))))
-   `(centaur-tabs-close-selected   ((t (:foreground ,black :background ,orange))))
-   `(centaur-tabs-modified-marker-unselected ((t (:foreground ,orange :background ,bg-or-none
-                                                  :underline (:color ,orange)))))
-   `(centaur-tabs-modified-marker-selected   ((t (:foreground ,black :background ,orange))))
-   `(centaur-tabs-active-bar-face ((t (:background ,orange))))
+   ;;
+   ;; 段の高さは tab-line の枠の上下 3px で、上の tab-bar と同じ 32px にする。
+   ;; urusi-emacs ではネイティブのタブがこの高さに収まり、色もこの face から取る。
+   `(tab-line ((t (:inherit nil :foreground ,light-grey :background ,bg-or-none
+                   :box (:line-width (0 . 3) :style flat-button)))))
+   `(tab-line-tab          ((t (:inherit tab-line))))
+   `(tab-line-tab-current  ((t (:foreground ,black :background ,orange))))
+   `(tab-line-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(tab-line-highlight    ((t (:foreground ,orange))))
 
    ;; 選択・検索
    ;; region は Ghostty の selection-foreground / selection-background に合わせる

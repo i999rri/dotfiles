@@ -21,6 +21,7 @@
 (require 'i999rri-titlebar)
 (require 'i999rri-child-frame)
 (require 'i999rri-layout)
+(require 'i999rri-tabs)
 
 (setq urusi-screen-components
       '(i999rri-titlebar
@@ -28,6 +29,9 @@
 
 ;; 子フレーム (浮かぶ入力欄、補完のポップアップ) に影と角丸を付ける。
 (setq urusi-screen-child-frame-function #'i999rri-child-frame)
+
+;; 各窓の上の段のファイルのタブを、文字ではなくネイティブのタブで描く。
+(setq urusi-screen-tab-line-function #'i999rri-tab-line)
 
 (provide 'i999rri-urusi)
 ;;; i999rri-urusi.el ends here
