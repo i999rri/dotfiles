@@ -1239,6 +1239,8 @@
 
 (use-package tab-line
   :ensure nil
+  ;; :bind だけだとキーを押すまで読み込まれず、:config のモードも有効にならない
+  :demand t
   :custom
   (tab-line-tabs-function #'i999rri/tab-line-tabs)
   (tab-line-tab-name-function #'i999rri/tab-line-tab-name)
