@@ -16,7 +16,7 @@
 (require 'urusi-screen)
 (require 'urusi-tabs)
 
-(defvar i999rri-tabs-accent-thickness 2
+(defvar i999rri-tabs-accent-thickness 1
   "段の下に引く線の太さ (XAML の単位)。")
 
 (defun i999rri-tabs--color (face attribute)
