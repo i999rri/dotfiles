@@ -3,7 +3,7 @@
 ;;; Commentary:
 
 ;; Visual Studio のように、窓の一番下に 1 本だけステータスバーを置く。いま作業
-;; している窓について、ブランチ・バッファ・エラーの数・カーソルの位置・文字コード・
+;; している窓について、ブランチ・エラーの数・カーソルの位置・文字コード・
 ;; メジャーモードを出す。色はモードライン (テーマの `mode-line') から取る。
 ;;
 ;; 同じことを言うので、各窓のモードラインは出さない。窓どうしの境目は、モード
@@ -24,8 +24,8 @@
 (defun i999rri-statusbar (frame)
   "FRAME の一番下に置くステータスバー。"
   (urusi-statusbar frame
-                   :left '(urusi-statusbar-vc
-                           urusi-statusbar-buffer)
+                   ;; ファイル名はタブにあるので出さない
+                   :left '(urusi-statusbar-vc)
                    :right '(urusi-statusbar-diagnostics
                             urusi-statusbar-position
                             urusi-statusbar-encoding
