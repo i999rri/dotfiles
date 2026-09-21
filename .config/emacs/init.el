@@ -1256,11 +1256,11 @@
           (lambda (a b) (< (i999rri/tab-order a) (i999rri/tab-order b))))))
 
 (defun i999rri/tab-line-tab-name (buffer &optional _buffers)
-  "タブの名前。保存していないファイルには • を付ける。"
-  ;; ● は名前の文字と並ぶと大きく、名前より目立つ。一回り小さい • にする
+  "タブの名前。保存していないファイルには、Visual Studio と同じく名前の後ろに * を付ける。"
+  ;; 記号 (●) を離して置くと、名前の文字より大きく目立つ
   (concat (buffer-name buffer)
           (when (and (buffer-file-name buffer) (buffer-modified-p buffer))
-            " •")))
+            "*")))
 
 (use-package tab-line
   :ensure nil
