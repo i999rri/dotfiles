@@ -497,6 +497,26 @@
   :config
   (mini-frame-mode 1))
 
+;; 入力中に届いたメッセージは、入力欄の後ろに続けず、その下の行に出す。
+;;
+;; Emacs は入力を待っている間のメッセージを、入力欄の後ろに [ ] で付け足す。
+;; 浮かべた入力欄は幅が決まっているため、問いの後ろに付くと折り返し、問いと
+;; メッセージが 1 つの文のように混ざる。行を分け、問いはそのままの形で残す。
+(defun i999rri/minibuffer-message-below (message)
+  "MESSAGE を入力欄の下の行に出す。入力中でなければ何もせず nil を返す。"
+  (when (set-minibuffer-message message)
+    (with-current-buffer (window-buffer (active-minibuffer-window))
+      (when (overlayp minibuffer-message-overlay)
+        ;; 付け足された " [...]" の頭の空白を改行に替える。カーソルは改行の
+        ;; 手前、つまり入力の末尾に置く
+        (let ((text (string-trim-left
+                     (overlay-get minibuffer-message-overlay 'after-string))))
+          (overlay-put minibuffer-message-overlay 'after-string
+                       (concat (propertize "\n" 'cursor t) text)))))
+    t))
+
+(setq set-message-functions '(i999rri/minibuffer-message-below))
+
 ;; 浮かべた入力欄で入力している間の which-key の一覧は、入力欄のすぐ下に子フレーム
 ;; として出す。
 ;;
