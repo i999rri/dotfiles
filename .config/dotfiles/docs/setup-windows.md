@@ -47,12 +47,15 @@ starship --version
 
 ### 4. Nerd Font を入れる
 
-Iosevka Nerd Font Mono を使う前提:
+Iosevka Nerd Font Mono を使う前提。Iosevka には日本語が無いので、日本語は更紗等幅ゴシック (Sarasa Mono J) で補う:
 
 ```powershell
 scoop bucket add nerd-fonts
 scoop install Iosevka-NF-Mono
+scoop install SarasaGothic-J
 ```
+
+日本語版の Windows では Sarasa Mono J が `更紗等幅ゴシック J` の名前で登録されるが、Ghostty と Emacs は英語名でも見つける。
 
 `Win + R` → `intl.cpl` 等で確認しなくても、Ghostty / Windows Terminal の font-family に `Iosevka Nerd Font Mono` を指定して描画されればOK。
 

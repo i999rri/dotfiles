@@ -46,6 +46,9 @@ window-padding-y = 0
 
 # フォント（お好みで変更してください）
 font-family = "Iosevka Nerd Font Mono"
+# Iosevka に無い日本語は更紗等幅ゴシックで。英数字が Iosevka から作られていて、
+# 全角がちょうど半角 2 文字ぶんなので、混ざっても字面と桁がそろう
+font-family = "Sarasa Mono J"
 font-size = 15 
 font-style = normal
 font-feature = -dlig

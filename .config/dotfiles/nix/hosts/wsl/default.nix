@@ -109,9 +109,13 @@ in
 
   environment.variables.BROWSER = "wsl-browser";
 
-  # The font the terminal and Emacs use on Windows, for what runs here and
+  # The fonts the terminal and Emacs use on Windows, for what runs here and
   # draws its own text (Emacs's host build measures it from the font files).
-  fonts.packages = [ pkgs.nerd-fonts.iosevka ];
+  # Sarasa is for Japanese, which Iosevka has none of.
+  fonts.packages = [
+    pkgs.nerd-fonts.iosevka
+    pkgs.sarasa-gothic
+  ];
 
   system.stateVersion = "26.05";
 }
