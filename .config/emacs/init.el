@@ -47,6 +47,14 @@
 ;;; elpaca (パッケージ管理)
 ;;; ---------------------------------------------------------------------------
 
+;; 開発版の Emacs (31.1.50 など、urusi-emacs の fork もこれ) では、elpaca は
+;; 同梱パッケージの版を正式リリース (31.1) の日付で判断し、そのたびに警告を出す。
+;; ビルドした日付のほうが実際の中身に合うので、elpaca を読む前に決めておく。
+;; 正式リリースの Emacs では何もしない。
+(when (and (> (length (version-to-list emacs-version)) 2) emacs-build-time)
+  (defvar elpaca-core-date
+    (list (string-to-number (format-time-string "%Y%m%d" emacs-build-time)))))
+
 ;; ここは elpaca 同梱の doc/installer.el をそのまま貼っている。
 ;; 自分で書き換えるとディレクトリ構成や autoloads の読み込み方が本体と食い違う。
 (defvar elpaca-installer-version 0.12)
