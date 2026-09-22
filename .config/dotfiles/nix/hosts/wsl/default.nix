@@ -117,5 +117,11 @@ in
     pkgs.sarasa-gothic
   ];
 
+  # The fonts gathered in one directory as well, /run/current-system/sw/share/X11/fonts,
+  # for what reads font files itself instead of asking fontconfig, as Emacs's host
+  # build does: otherwise they are only in the store, where fontconfig's own
+  # configuration is the only thing that says they are.
+  fonts.fontDir.enable = true;
+
   system.stateVersion = "26.05";
 }
