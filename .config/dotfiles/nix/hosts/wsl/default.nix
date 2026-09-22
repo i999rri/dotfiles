@@ -109,5 +109,9 @@ in
 
   environment.variables.BROWSER = "wsl-browser";
 
+  # The font the terminal and Emacs use on Windows, for what runs here and
+  # draws its own text (Emacs's host build measures it from the font files).
+  fonts.packages = [ pkgs.nerd-fonts.iosevka ];
+
   system.stateVersion = "26.05";
 }

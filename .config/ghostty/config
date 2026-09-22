@@ -45,7 +45,7 @@ window-padding-x = 0
 window-padding-y = 0
 
 # フォント（お好みで変更してください）
-font-family = "JetBrainsMono Nerd Font Mono Bold"
+font-family = "Iosevka Nerd Font Mono"
 font-size = 15 
 font-style = normal
 font-feature = -dlig

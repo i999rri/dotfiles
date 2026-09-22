@@ -40,13 +40,12 @@
 ;; しまうため。ウィンドウのピクセル寸法は保たれる一方、1 文字の大きさが増える
 ;; ぶん収まる文字数が減り、下で指定するサイズが無視されたように見える。
 ;;
-;; 太さは指定しない。ghostty 側は
-;;   font-family = "JetBrainsMono Nerd Font Mono Bold"
-;; と書いているが、この名前のファミリは存在せず (Windows にあるのは
-;; "JetBrainsMono NFM" で、Bold はその中のウェイト)、実際には解決できていない。
-;; また地の文を太字にすると、asiimov が Keyword や Function に付けている bold の
-;; 強調が効かなくなる。
-(push '(font . "JetBrainsMono NFM-15") default-frame-alist)
+;; Iosevka Nerd Font Mono。Windows ではファミリ名が長すぎるため "Iosevka NFM" の
+;; 名前で登録されている。ghostty 側の font-family と同じフォント。
+;;
+;; 太さは指定しない。地の文を太字にすると、asiimov が Keyword や Function に
+;; 付けている bold の強調が効かなくなる。
+(push '(font . "Iosevka NFM-15") default-frame-alist)
 
 ;; ウィンドウの初期サイズ。単位は行と桁で、実寸は上のフォントで決まる。
 ;; 80 桁のコードを開いて、横に補完やヘルプを出せる程度の幅にしてある。
