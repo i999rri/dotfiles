@@ -47,14 +47,17 @@ starship --version
 
 ### 4. Nerd Font を入れる
 
-JetBrainsMono Nerd Font Mono を使う前提:
+Iosevka Nerd Font Mono を使う前提。Iosevka には日本語が無いので、日本語は更紗等幅ゴシック (Sarasa Mono J) で補う:
 
 ```powershell
 scoop bucket add nerd-fonts
-scoop install JetBrainsMono-NF-Mono
+scoop install Iosevka-NF-Mono
+scoop install SarasaGothic-J
 ```
 
-`Win + R` → `intl.cpl` 等で確認しなくても、Ghostty / Windows Terminal の font-family に `JetBrainsMono Nerd Font Mono` を指定して描画されればOK。
+日本語版の Windows では Sarasa Mono J が `更紗等幅ゴシック J` の名前で登録されるが、Ghostty と Emacs は英語名でも見つける。
+
+`Win + R` → `intl.cpl` 等で確認しなくても、Ghostty / Windows Terminal の font-family に `Iosevka Nerd Font Mono` を指定して描画されればOK。
 
 ### 5. アップデート通知を抑止する環境変数
 
@@ -147,7 +150,7 @@ GetConsoleScreenBufferInfo failed in initialize_w32_display
 
 terminal で使いたい場合は WSL 側に Emacs を入れる。dotfiles は `$HOME` に展開されるため、同じ設定がそのまま使える。
 
-フォントは `JetBrainsMono NFM` を使う (ステップ 4 で入れた Nerd Font)。入っていなければ既定のフォントにフォールバックする。
+フォントは `Iosevka NFM` を使う (ステップ 4 で入れた Nerd Font)。入っていなければ既定のフォントにフォールバックする。
 
 構成は nvim 側と揃えてある (`.config/emacs/init.el` の冒頭に対応表がある)。キーバインドは Emacs の標準のままで、vim 化はしていない。
 
@@ -173,10 +176,10 @@ Nerd Font が当たっていない。確認:
 
 ```powershell
 fc-list | Select-String "Nerd Font"   # WSL/git-bash 系のみ
-# あるいは Windows: コントロールパネル → フォント で JetBrainsMono Nerd Font Mono の存在確認
+# あるいは Windows: コントロールパネル → フォント で Iosevka Nerd Font Mono の存在確認
 ```
 
-Ghostty / Windows Terminal の `font-family` に `JetBrainsMono Nerd Font Mono` が指定されているかも確認。
+Ghostty / Windows Terminal の `font-family` に `Iosevka Nerd Font Mono` が指定されているかも確認。
 
 ### プロンプト記号が出ない
 
