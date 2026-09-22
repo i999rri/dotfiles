@@ -49,9 +49,14 @@
 (add-hook 'urusi-layout-make-frame-functions #'i999rri-layout--plain-output)
 
 ;; ビルドの出力には行番号を出さない。行番号は global-display-line-numbers-mode で
-;; 全部のバッファに付けているので、その例外にする
-(with-eval-after-load 'display-line-numbers
-  (add-to-list 'display-line-numbers-exempt-modes 'compilation-mode))
+;; 全部のバッファに付けているので、付ける関数のほうで飛ばす。例外の一覧
+;; (display-line-numbers-exempt-modes) は urusi-emacs の Emacs にはまだない
+(defun i999rri-layout--skip-line-numbers (&rest _)
+  "ビルドの出力のバッファなら non-nil を返し、行番号を付けさせない。"
+  (derived-mode-p 'compilation-mode))
+
+(advice-add 'display-line-numbers--turn-on :before-until
+            #'i999rri-layout--skip-line-numbers)
 
 ;; ビルドの出力は本体より 1 段小さい文字で出す。フレームの default を変えると
 ;; テーマを切り替えたときに戻るので、バッファの文字の倍率で小さくする
