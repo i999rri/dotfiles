@@ -107,6 +107,20 @@
 ;;; 基本設定 (nvim の vim.opt 相当)
 ;;; ---------------------------------------------------------------------------
 
+;; 日本語は Iosevka に無いので更紗等幅ゴシック (Sarasa Mono J) で。英数字が Iosevka
+;; から作られていて、全角がちょうど半角 2 文字ぶんになるため、日本語が混ざっても
+;; 字面と桁がそろう。ghostty 側の 2 つ目の font-family と同じ。
+;;
+;; 日本語版の Windows では "更紗等幅ゴシック J" の名前で登録されているが、
+;; 英語名でも見つかる。既定の日本語フォントの後ろに足すのではなく置き換える。
+;; 後ろに足すと、Windows では先に並んでいる MS ゴシックなどが使われる。
+;;
+;; early-init.el ではなくここに置くのは、ウィンドウシステムを立ち上げるときに
+;; Emacs が既定のフォントセットを作り直し、それより前に置いたものは消えるため
+;; (urusi-emacs の host ビルドで、日本語が Sarasa Gothic CL になっていた)。
+(dolist (script '(kana han cjk-misc))
+  (set-fontset-font t script (font-spec :family "Sarasa Mono J")))
+
 ;; nvim: vim.opt.number = true
 (setq display-line-numbers-type 'absolute)
 (global-display-line-numbers-mode 1)
