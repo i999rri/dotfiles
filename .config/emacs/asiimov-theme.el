@@ -231,9 +231,10 @@
 
    ;; minibuffer
    `(minibuffer-prompt ((t (:foreground ,orange))))
-   ;; 真ん中に浮かべた入力欄 (mini-frame) などの子フレームの枠。タブの塗りと同じ
-   ;; オレンジで囲み、編集画面の上に載っていることを示す
-   `(child-frame-border ((t (:background ,orange))))
+   ;; 子フレームの枠。浮いていることは影で分かるので枠は描かず
+   ;; (i999rri-child-frame.el)、Emacs が枠のぶんに塗る色を背景に
+   ;; 合わせて見えなくする
+   `(child-frame-border ((t (:background ,bg))))
 
    ;; 補完の注釈まわり。既定のままだと色が付かず、候補と区別できない
    `(completions-annotations     ((t (:foreground ,comment :slant italic))))
@@ -253,6 +254,8 @@
    `(link                ((t (:foreground ,blue :underline t))))
    `(link-visited        ((t (:foreground ,purple :underline t))))
    `(button              ((t (:foreground ,blue :underline t))))
+   ;; ボタンを押している間。既定は red1 で、テーマから浮いて見える
+   `(widget-button-pressed ((t (:foreground ,orange))))
    `(escape-glyph        ((t (:foreground ,light-orange))))
    `(homoglyph           ((t (:foreground ,light-orange))))
    `(isearch-fail        ((t (:foreground ,white :background ,red))))
