@@ -29,11 +29,19 @@
         urusi-layout-component
         i999rri-statusbar))
 
+;; フレームの中身を Emacs 自身が描いた絵にする。Emacs はフォントファイルを自分で
+;; 読んで字形をラスタライズするので、文字を組むときと描くときの寸法が同じに
+;; なる。元に戻すなら urusi-screen-windows を指す。
+(setq urusi-screen-frame-function #'urusi-screen-emacs)
+
 ;; 子フレーム (浮かぶ入力欄、補完のポップアップ) に影と角丸を付ける。
 (setq urusi-screen-child-frame-function #'i999rri-child-frame)
 
 ;; 各窓の上の段のファイルのタブを、文字ではなくネイティブのタブで描く。
+;; Emacs は段の場所を空けるだけにして、文字のタブは描かせない。描かせると
+;; ネイティブのタブの下に隠れたまま、変わるたびに送られることになる。
 (setq urusi-screen-tab-line-function #'i999rri-tab-line)
+(setq host-draw-tab-lines nil)
 
 (provide 'i999rri-urusi)
 ;;; i999rri-urusi.el ends here
