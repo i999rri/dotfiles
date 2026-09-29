@@ -40,14 +40,19 @@
 ;; しまうため。ウィンドウのピクセル寸法は保たれる一方、1 文字の大きさが増える
 ;; ぶん収まる文字数が減り、下で指定するサイズが無視されたように見える。
 ;;
-;; Iosevka Nerd Font Mono。ghostty 側の font-family と同じフォント。Windows の
+;; Iosevka Nerd Font Mono。ghostty 側の font-family と同じフォント。w32 の
 ;; Emacs はフォントを GDI の名前で探し、そこではファミリ名が長すぎるため
-;; "Iosevka NFM" で登録されている。Linux の Emacs (urusi-emacs の host ビルドを
-;; 含む) はフォントファイルに書かれた本来の名前で探す。
+;; "Iosevka NFM" で登録されている。フォントファイルに書かれた本来の名前で
+;; 探すのは Linux の Emacs と、Windows でも urusi-emacs の host ビルド。
+;;
+;; 見るのが system-type ではなくウインドウシステムなのは、Windows に両方ある
+;; ため。名前が違うのは OS の都合ではなくフォントの探し方の都合で、探し方を
+;; 決めるのはウインドウシステムのほう。合わないと起動時にフレームが作れず、
+;; Emacs がそのまま終わる。
 ;;
 ;; 太さは指定しない。地の文を太字にすると、asiimov が Keyword や Function に
 ;; 付けている bold の強調が効かなくなる。
-(push (cons 'font (if (eq system-type 'windows-nt)
+(push (cons 'font (if (eq initial-window-system 'w32)
                       "Iosevka NFM-15"
                     "Iosevka Nerd Font Mono-15"))
       default-frame-alist)
