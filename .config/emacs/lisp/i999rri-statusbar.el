@@ -1,4 +1,4 @@
-;;; i999rri-statusbar.el --- urusi-emacs のステータスバー -*- lexical-binding: t; -*-
+;;; i999rri-statusbar.el --- urushi-emacs のステータスバー -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 
@@ -14,38 +14,38 @@
 
 ;;; Code:
 
-(require 'urusi-screen)
-(require 'urusi-statusbar)
+(require 'urushi-screen)
+(require 'urushi-statusbar)
 
 (defvar i999rri-statusbar-height 24
   "ステータスバーの高さ (XAML の単位)。Visual Studio と同じくらい。")
 
 (defun i999rri-statusbar--color (attribute frame)
   "FRAME での `mode-line' の ATTRIBUTE の色を XAML の形で返す。"
-  (urusi-screen-color (face-attribute 'mode-line attribute frame t)))
+  (urushi-screen-color (face-attribute 'mode-line attribute frame t)))
 
 (defun i999rri-statusbar (frame)
   "FRAME の一番下に置くステータスバー。"
-  (urusi-statusbar frame
+  (urushi-statusbar frame
                    ;; ファイル名はタブにあるので出さない
-                   :left '(urusi-statusbar-vc)
+                   :left '(urushi-statusbar-vc)
                    ;; Emacs のメッセージは、画面の下のエコーエリアではなくここに出す
-                   :fill '(urusi-statusbar-message)
-                   :right '(urusi-statusbar-diagnostics
-                            urusi-statusbar-position
-                            urusi-statusbar-encoding
-                            urusi-statusbar-major-mode)
+                   :fill '(urushi-statusbar-message)
+                   :right '(urushi-statusbar-diagnostics
+                            urushi-statusbar-position
+                            urushi-statusbar-encoding
+                            urushi-statusbar-major-mode)
                    :Height i999rri-statusbar-height
                    :Background (or (i999rri-statusbar--color :background frame)
                                    "Transparent")
                    :Foreground (or (i999rri-statusbar--color :foreground frame)
                                    "White")))
 
-(setq urusi-screen-echo-area 'when-active)
+(setq urushi-screen-echo-area 'when-active)
 
 ;; 入力欄で入力している間のメッセージも、入力欄の後ろではなくこの帯に出す。
 ;; 浮かべた入力欄は幅が決まっているため、後ろに付くと折り返して問いと混ざる
-(add-hook 'set-message-functions #'urusi-statusbar-take-minibuffer-message)
+(add-hook 'set-message-functions #'urushi-statusbar-take-minibuffer-message)
 
 (defun i999rri-statusbar-hide-mode-lines ()
   "各窓のモードラインを消し、窓の境目を区切り線で示す。"

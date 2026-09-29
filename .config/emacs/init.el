@@ -47,7 +47,7 @@
 ;;; elpaca (パッケージ管理)
 ;;; ---------------------------------------------------------------------------
 
-;; 開発版の Emacs (31.1.50 など、urusi-emacs の fork もこれ) では、elpaca は
+;; 開発版の Emacs (31.1.50 など、urushi-emacs の fork もこれ) では、elpaca は
 ;; 同梱パッケージの版を正式リリース (31.1) の日付で判断し、そのたびに警告を出す。
 ;; ビルドした日付のほうが実際の中身に合うので、elpaca を読む前に決めておく。
 ;; 正式リリースの Emacs では何もしない。
@@ -117,7 +117,7 @@
 ;;
 ;; early-init.el ではなくここに置くのは、ウィンドウシステムを立ち上げるときに
 ;; Emacs が既定のフォントセットを作り直し、それより前に置いたものは消えるため
-;; (urusi-emacs の host ビルドで、日本語が Sarasa Gothic CL になっていた)。
+;; (urushi-emacs の host ビルドで、日本語が Sarasa Gothic CL になっていた)。
 (dolist (script '(kana han cjk-misc))
   (set-fontset-font t script (font-spec :family "Sarasa Mono J")))
 
@@ -400,10 +400,10 @@
 ;; 自分で書いた Emacs Lisp は lisp/ に分けて置き、ここから require する。
 (add-to-list 'load-path (expand-file-name "lisp" i999rri/config-directory))
 
-;; urusi-emacs の中で動いているときの画面 (タイトルバーなど)。
-;; 普通の Emacs には urusi がないので読まない。
-(when (featurep 'urusi)
-  (require 'i999rri-urusi))
+;; urushi-emacs の中で動いているときの画面 (タイトルバーなど)。
+;; 普通の Emacs には urushi がないので読まない。
+(when (featurep 'urushi)
+  (require 'i999rri-urushi))
 
 (use-package which-key
   :ensure nil                           ; Emacs 30 に同梱
@@ -1233,7 +1233,7 @@
 ;;
 ;; 描く場所は各窓の tab-line で、header-line は使わない。どのバッファを並べるかは
 ;; ここで決め、見た目は描く側に任せる。普通の Emacs では tab-line がそのまま文字で
-;; 描き、urusi-emacs ではネイティブのタブで描く (lisp/i999rri-tabs.el)。
+;; 描き、urushi-emacs ではネイティブのタブで描く (lisp/i999rri-tabs.el)。
 
 (defun i999rri/tab-group (buffer)
   "BUFFER を並べるタブの組。プロジェクトのタブへの振り分けと同じ基準で分ける。"

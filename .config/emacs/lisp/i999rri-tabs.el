@@ -1,4 +1,4 @@
-;;; i999rri-tabs.el --- urusi-emacs のファイルのタブ -*- lexical-binding: t; -*-
+;;; i999rri-tabs.el --- urushi-emacs のファイルのタブ -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 
@@ -13,15 +13,15 @@
 
 ;;; Code:
 
-(require 'urusi-screen)
-(require 'urusi-tabs)
+(require 'urushi-screen)
+(require 'urushi-tabs)
 
 (defvar i999rri-tabs-accent-thickness 1
   "段の下に引く線の太さ (XAML の単位)。")
 
 (defun i999rri-tabs--color (face attribute)
   "FACE の ATTRIBUTE の色を XAML の形で返す。"
-  (urusi-screen-color (face-attribute face attribute nil t)))
+  (urushi-screen-color (face-attribute face attribute nil t)))
 
 (defun i999rri-tabs-icon (tab)
   "TAB のバッファの種類のアイコン (nerd-icons)。色はタブの文字と同じにする。"
@@ -35,7 +35,7 @@
           (propertize (substring-no-properties icon)
                       'face `(:family ,nerd-icons-font-family)))))))
 
-(setq urusi-tabs-icon-function #'i999rri-tabs-icon)
+(setq urushi-tabs-icon-function #'i999rri-tabs-icon)
 
 (defun i999rri-tab-line (window _line)
   "WINDOW のファイルのタブを、下にアクセントの線を引いた段として返す。"
@@ -43,7 +43,7 @@
                              "Transparent")
            :BorderThickness ,(format "0,0,0,%s" i999rri-tabs-accent-thickness)
            :Background ,(or (i999rri-tabs--color 'tab-line :background) "Transparent")
-           ,(urusi-tabs (urusi-tabs-tab-line-tabs window))))
+           ,(urushi-tabs (urushi-tabs-tab-line-tabs window))))
 
 (provide 'i999rri-tabs)
 ;;; i999rri-tabs.el ends here

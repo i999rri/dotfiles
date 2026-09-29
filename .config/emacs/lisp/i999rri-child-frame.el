@@ -1,10 +1,10 @@
-;;; i999rri-child-frame.el --- urusi-emacs の子フレームの見た目 -*- lexical-binding: t; -*-
+;;; i999rri-child-frame.el --- urushi-emacs の子フレームの見た目 -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 
-;; urusi-emacs が描く子フレーム (浮かぶ入力欄、補完のポップアップなど) に
+;; urushi-emacs が描く子フレーム (浮かぶ入力欄、補完のポップアップなど) に
 ;; 影と角丸を付ける。置く位置と大きさは Emacs が決め、ここでは中身を包む
-;; だけ。中身は urusi-emacs の `urusi-screen-child-frame-body' が描く。
+;; だけ。中身は urushi-emacs の `urushi-screen-child-frame-body' が描く。
 ;;
 ;; 影は Windows のメニューなどと同じ `ThemeShadow'。`Translation' の 3 つ目
 ;; の数字が浮かせる高さで、大きいほど影が広く柔らかくなる。暗い背景では
@@ -19,7 +19,7 @@
 
 ;;; Code:
 
-(require 'urusi-screen)
+(require 'urushi-screen)
 
 (defun i999rri-child-frame--minibuffer-p (frame)
   "FRAME が mini-frame の浮かぶ入力欄なら non-nil を返す。"
@@ -41,14 +41,14 @@
   `(Border :CornerRadius ,radius
            :Translation ,(format "0,0,%d" depth)
            (Border.Shadow (ThemeShadow))
-           ,(urusi-screen-child-frame-body frame :border nil :corner-radius radius)))
+           ,(urushi-screen-child-frame-body frame :border nil :corner-radius radius)))
 
 (defun i999rri-child-frame--corfu-p (frame)
   "FRAME が corfu の補完のポップアップなら non-nil を返す。"
   (equal (buffer-name (window-buffer (frame-root-window frame))) " *corfu*"))
 
 (defun i999rri-child-frame (frame)
-  "子フレーム FRAME を描く。`urusi-screen-child-frame-function' に使う。
+  "子フレーム FRAME を描く。`urushi-screen-child-frame-function' に使う。
 入力欄 (と、その下の which-key の一覧) は大きく浮かせて角を丸め、補完は
 小さな影だけにする。どれも枠は描かない。ほかの子フレームは Emacs が
 描くままにする。"
@@ -61,8 +61,8 @@
    ((i999rri-child-frame--corfu-p frame)
     `(Border :Translation "0,0,16"
              (Border.Shadow (ThemeShadow))
-             ,(urusi-screen-child-frame-body frame :border nil)))
-   (t (urusi-screen-child-frame-body frame))))
+             ,(urushi-screen-child-frame-body frame :border nil)))
+   (t (urushi-screen-child-frame-body frame))))
 
 (provide 'i999rri-child-frame)
 ;;; i999rri-child-frame.el ends here

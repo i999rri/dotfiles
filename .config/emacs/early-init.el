@@ -43,7 +43,7 @@
 ;; Iosevka Nerd Font Mono。ghostty 側の font-family と同じフォント。w32 の
 ;; Emacs はフォントを GDI の名前で探し、そこではファミリ名が長すぎるため
 ;; "Iosevka NFM" で登録されている。フォントファイルに書かれた本来の名前で
-;; 探すのは Linux の Emacs と、Windows でも urusi-emacs の host ビルド。
+;; 探すのは Linux の Emacs と、Windows でも urushi-emacs の host ビルド。
 ;;
 ;; 見るのが system-type ではなくウインドウシステムなのは、Windows に両方ある
 ;; ため。名前が違うのは OS の都合ではなくフォントの探し方の都合で、探し方を
