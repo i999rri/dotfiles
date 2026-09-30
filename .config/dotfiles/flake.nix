@@ -18,6 +18,12 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Homebrew 本体を宣言的にインストールする。cask/formula の管理は
+    # nix-darwin の homebrew.* が行い、この input は「Homebrew が存在すること」
+    # だけを受け持つ (両者は併用前提)。tap は nix で固定せず Homebrew の
+    # 既定 (API 経由) に任せるため、homebrew-core/cask の input は入れない。
+    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 
   outputs =
@@ -73,7 +79,8 @@
             ./nix/modules
             ./nix/hosts/${hostname}
             (homeModule username home-manager.nixosModules.home-manager)
-          ] ++ extraModules;
+          ]
+          ++ extraModules;
         };
 
       mkDarwin =
@@ -87,8 +94,10 @@
           modules = [
             ./nix/darwin
             ./nix/hosts/${hostname}
+            inputs.nix-homebrew.darwinModules.nix-homebrew
             (homeModule username home-manager.darwinModules.home-manager)
-          ] ++ extraModules;
+          ]
+          ++ extraModules;
         };
     in
     {

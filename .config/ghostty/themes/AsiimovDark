@@ -1,0 +1,30 @@
+# Ghostty Asiimov Theme (Dark)
+# CS:GO Asiimov スキンにインスパイアされたダークテーマ
+
+# 基本色
+background = 1e1e1e
+foreground = e0e0e0
+cursor-color = ff6b35
+cursor-text = 1e1e1e
+
+# 選択範囲
+selection-background = ff6b35
+selection-foreground = 1e1e1e
+
+# ANSI カラーパレット
+palette = 0=2d2d2d
+palette = 1=ff6b35
+palette = 2=4caf50
+palette = 3=ff9800
+palette = 4=2196f3
+palette = 5=e91e63
+palette = 6=00bcd4
+palette = 7=d4d4d4
+palette = 8=808080
+palette = 9=ff8c61
+palette = 10=66bb6a
+palette = 11=ffc947
+palette = 12=42a5f5
+palette = 13=ff7043
+palette = 14=26c6da
+palette = 15=f5f5f5
