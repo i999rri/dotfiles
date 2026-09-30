@@ -82,9 +82,14 @@ in
   #                あり、この環境の前提になっている。darwin では公式の
   #                ビルド済みバイナリ (ghostty-bin) を使う。ソースの ghostty
   #                は nixpkgs では Linux 専用
+  #   emacs-macport  GUI の Emacs。macport はスクロールや全画面など macOS
+  #                  との統合が素の Cocoa ビルドより良い。設定は
+  #                  .config/emacs にあり、elisp の取得は elpaca が行うので
+  #                  Nix は本体だけを渡す (nvim の lazy.nvim と同じ分担)
   environment.systemPackages = [
     pkgs.raycast
     pkgs.ghostty-bin
+    pkgs.emacs-macport
   ];
 
   # 入力メソッドだけは systemPackages に入れても意味がない。macOS が探すのは
