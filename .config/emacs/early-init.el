@@ -40,13 +40,22 @@
 ;; しまうため。ウィンドウのピクセル寸法は保たれる一方、1 文字の大きさが増える
 ;; ぶん収まる文字数が減り、下で指定するサイズが無視されたように見える。
 ;;
-;; 太さは指定しない。ghostty 側は
-;;   font-family = "JetBrainsMono Nerd Font Mono Bold"
-;; と書いているが、この名前のファミリは存在せず (Windows にあるのは
-;; "JetBrainsMono NFM" で、Bold はその中のウェイト)、実際には解決できていない。
-;; また地の文を太字にすると、asiimov が Keyword や Function に付けている bold の
-;; 強調が効かなくなる。
-(push '(font . "JetBrainsMono NFM-15") default-frame-alist)
+;; Iosevka Nerd Font Mono。ghostty 側の font-family と同じフォント。w32 の
+;; Emacs はフォントを GDI の名前で探し、そこではファミリ名が長すぎるため
+;; "Iosevka NFM" で登録されている。フォントファイルに書かれた本来の名前で
+;; 探すのは Linux の Emacs と、Windows でも urushi-emacs の host ビルド。
+;;
+;; 見るのが system-type ではなくウインドウシステムなのは、Windows に両方ある
+;; ため。名前が違うのは OS の都合ではなくフォントの探し方の都合で、探し方を
+;; 決めるのはウインドウシステムのほう。合わないと起動時にフレームが作れず、
+;; Emacs がそのまま終わる。
+;;
+;; 太さは指定しない。地の文を太字にすると、asiimov が Keyword や Function に
+;; 付けている bold の強調が効かなくなる。
+(push (cons 'font (if (eq initial-window-system 'w32)
+                      "Iosevka NFM-15"
+                    "Iosevka Nerd Font Mono-15"))
+      default-frame-alist)
 
 ;; ウィンドウの初期サイズ。単位は行と桁で、実寸は上のフォントで決まる。
 ;; 80 桁のコードを開いて、横に補完やヘルプを出せる程度の幅にしてある。
@@ -63,7 +72,13 @@
 ;; 近いものとして背景自体を半透明にし、後ろの壁紙を透かす。
 ;;
 ;; alpha ではなく alpha-background を使うのは、前者だと文字まで透けるため。
-(push '(alpha-background . 85) default-frame-alist)
+;;
+;; ただし Windows 版は alpha-background を受け付けても描画に反映せず、背景は
+;; 不透明のままになる。Windows では文字ごと透ける alpha で代える。文字が薄く
+;; なりすぎないよう、alpha-background より不透明寄りの値にしている。
+(if (eq system-type 'windows-nt)
+    (push '(alpha . 90) default-frame-alist)
+  (push '(alpha-background . 85) default-frame-alist))
 
 (setq menu-bar-mode nil
       tool-bar-mode nil

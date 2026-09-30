@@ -52,27 +52,47 @@
    `(cursor           ((t (:background ,orange))))
    `(hl-line          ((t (:background ,dark-grey))))
    `(line-number      ((t (:foreground ,light-grey :background ,bg-or-none))))
-   `(line-number-current-line ((t (:foreground ,orange :weight bold :background ,bg-or-none))))
+   `(line-number-current-line ((t (:foreground ,orange :background ,bg-or-none))))
    `(fringe           ((t (:background ,bg-or-none))))
    `(vertical-border  ((t (:foreground ,dark-grey))))
    `(fill-column-indicator ((t (:foreground ,dark-grey))))
 
-   ;; タブ (tab-bar)
+   ;; タブ (tab-bar と、その下の段のファイルのタブ)
    ;;
-   ;; 帯の背景を編集領域と揃えて境目を作らない。今いるタブはオレンジの文字と下線で
-   ;; 示す。ベタ塗りにしないのは、画面の上端に強い色面があると視線がそこで止まり、
-   ;; 本文へ戻るのに一拍かかるため。
+   ;; Visual Studio (2019 まで) のドキュメントタブの形にする。選択中のタブはオレンジで
+   ;; 塗って黒い文字にし、段の下にオレンジの線を横いっぱいに引く。塗ったタブと編集画面が
+   ;; この線でつながり、どのタブを見ているかが形で分かる。
    ;;
-   ;; 指定がないと mode-line から色を引き継ぎ、選択中のタブが黒文字にオレンジの
-   ;; ベタ塗りになる。
+   ;; 線は選択中以外のタブと、右端までの埋め草に付けた下線で描く (init.el の
+   ;; accent-line)。選択中のタブは同じ色で塗っているため、下線が無くても線は途切れない。
+   ;;
+   ;; tab-bar の枠 (flat-button) は背景と同じ色で描かれ、文字の周りの余白になる。
+   ;; 上下の 3px で、ファイルのタブの段と同じ 32px の高さにする (15pt の 1 文字が 26px)。
+   ;;
+   ;; 帯そのものの背景は編集領域と揃え、塗るのは選択中のタブだけにする。
    `(tab-bar          ((t (:foreground ,light-grey :background ,bg-or-none))))
-   `(tab-bar-tab      ((t (:foreground ,orange :background ,bg-or-none
-                           :underline (:color ,orange)))))
-   `(tab-bar-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(tab-bar-tab      ((t (:foreground ,black :background ,orange
+                           :box (:line-width (10 . 3) :style flat-button)))))
+   `(tab-bar-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none
+                               :underline (:color ,orange)
+                               :box (:line-width (10 . 3) :style flat-button)))))
    ;; グループ (C-x t G) を使ったときの見え方も揃えておく
    `(tab-bar-tab-group-current  ((t (:foreground ,orange :background ,bg-or-none))))
    `(tab-bar-tab-group-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
    `(tab-bar-tab-ungrouped      ((t (:foreground ,light-grey :background ,bg-or-none))))
+
+   ;; 下の段のファイルのタブ (tab-line)。tab-line の既定は明るい灰色の背景に
+   ;; プロポーショナルフォントで、指定しないとタブの外側がそのまま見える。
+   ;; 色の付け方は上の tab-bar と同じ。
+   ;;
+   ;; 段の高さは tab-line の枠の上下 1px で 28px にする (15pt の 1 文字が 26px)。
+   ;; urushi-emacs ではネイティブのタブがこの高さに収まり、色もこの face から取る。
+   `(tab-line ((t (:inherit nil :foreground ,light-grey :background ,bg-or-none
+                   :box (:line-width (1 . 1) :style flat-button)))))
+   `(tab-line-tab          ((t (:inherit tab-line))))
+   `(tab-line-tab-current  ((t (:foreground ,black :background ,orange))))
+   `(tab-line-tab-inactive ((t (:foreground ,light-grey :background ,bg-or-none))))
+   `(tab-line-highlight    ((t (:foreground ,orange))))
 
    ;; 選択・検索
    ;; region は Ghostty の selection-foreground / selection-background に合わせる
@@ -81,17 +101,17 @@
    `(highlight        ((t (:foreground ,black :background ,orange))))
    `(isearch          ((t (:foreground ,white :background ,orange))))
    `(lazy-highlight   ((t (:foreground ,white :background ,dark-orange))))
-   `(match            ((t (:foreground ,orange :weight bold))))
+   `(match            ((t (:foreground ,orange))))
 
    ;; モードライン (nvim の StatusLine に対応)
    `(mode-line          ((t (:foreground ,black :background ,orange))))
    `(mode-line-inactive ((t (:foreground ,grey  :background ,dark-grey))))
-   `(mode-line-buffer-id ((t (:weight bold))))
+   `(mode-line-buffer-id ((t ())))
 
-   ;; タブ (nvim の TabLine)
-   `(tab-bar          ((t (:foreground ,grey  :background ,dark-grey))))
-   `(tab-bar-tab      ((t (:foreground ,black :background ,orange))))
-   `(tab-bar-tab-inactive ((t (:foreground ,grey :background ,dark-grey))))
+   ;; 窓どうしの区切り線 (window-divider-mode)。モードラインを出さないときの境目
+   `(window-divider             ((t (:foreground ,dark-grey))))
+   `(window-divider-first-pixel ((t (:foreground ,dark-grey))))
+   `(window-divider-last-pixel  ((t (:foreground ,dark-grey))))
 
    ;; 補完のポップアップ (nvim の Pmenu)
    `(corfu-default    ((t (:foreground ,fg    :background ,dark-grey))))
@@ -101,15 +121,15 @@
 
    ;; vertico / consult の選択行 (nvim の TelescopeSelection)
    `(vertico-current  ((t (:foreground ,black :background ,orange :extend t))))
-   `(completions-common-part ((t (:foreground ,orange :weight bold))))
-   `(orderless-match-face-0 ((t (:foreground ,orange :weight bold))))
-   `(orderless-match-face-1 ((t (:foreground ,blue   :weight bold))))
-   `(orderless-match-face-2 ((t (:foreground ,green  :weight bold))))
-   `(orderless-match-face-3 ((t (:foreground ,purple :weight bold))))
+   `(completions-common-part ((t (:foreground ,orange))))
+   `(orderless-match-face-0 ((t (:foreground ,orange))))
+   `(orderless-match-face-1 ((t (:foreground ,blue  ))))
+   `(orderless-match-face-2 ((t (:foreground ,green ))))
+   `(orderless-match-face-3 ((t (:foreground ,purple))))
 
    ;; エラー・警告
-   `(error            ((t (:foreground ,red :weight bold))))
-   `(warning          ((t (:foreground ,yellow-orange :weight bold))))
+   `(error            ((t (:foreground ,red))))
+   `(warning          ((t (:foreground ,yellow-orange))))
    `(success          ((t (:foreground ,green))))
 
    ;; 構文
@@ -120,14 +140,14 @@
    `(font-lock-constant-face      ((t (:foreground ,orange))))
    `(font-lock-number-face        ((t (:foreground ,orange))))
    `(font-lock-variable-name-face ((t (:foreground ,fg))))
-   `(font-lock-function-name-face ((t (:foreground ,blue :weight bold))))
-   `(font-lock-keyword-face       ((t (:foreground ,orange :weight bold))))
+   `(font-lock-function-name-face ((t (:foreground ,blue))))
+   `(font-lock-keyword-face       ((t (:foreground ,orange))))
    `(font-lock-builtin-face       ((t (:foreground ,orange))))
-   `(font-lock-type-face          ((t (:foreground ,blue :weight bold))))
+   `(font-lock-type-face          ((t (:foreground ,blue))))
    `(font-lock-preprocessor-face  ((t (:foreground ,purple))))
    `(font-lock-operator-face      ((t (:foreground ,grey))))
    `(font-lock-delimiter-face     ((t (:foreground ,grey))))
-   `(font-lock-warning-face       ((t (:foreground ,red :weight bold))))
+   `(font-lock-warning-face       ((t (:foreground ,red))))
    `(font-lock-negation-char-face ((t (:foreground ,light-orange))))
 
    ;; Emacs 29 以降で増えた分。指定しないと既定色のまま残り、他と揃わない。
@@ -145,8 +165,8 @@
    `(font-lock-function-call-face     ((t (:foreground ,blue))))
    `(font-lock-doc-markup-face        ((t (:foreground ,purple))))
 
-   `(show-paren-match ((t (:foreground ,orange :background ,grey-3 :weight bold))))
-   `(show-paren-mismatch ((t (:foreground ,white :background ,red :weight bold))))
+   `(show-paren-match ((t (:foreground ,orange :background ,grey-3))))
+   `(show-paren-mismatch ((t (:foreground ,white :background ,red))))
 
    ;; 端末やコンパイル結果の出力に使われる 16 色。
    ;; 値は .config/ghostty/config の palette をそのまま使う。asiimov.lua の
@@ -179,9 +199,9 @@
    ;; magit (nvim の GitGutter 相当も兼ねる)
    `(magit-diff-added           ((t (:foreground ,green :background "#1a3a1a"))))
    `(magit-diff-removed         ((t (:foreground ,red   :background "#3a1a1a"))))
-   `(magit-diff-added-highlight   ((t (:foreground ,green :background "#1a3a1a" :weight bold))))
-   `(magit-diff-removed-highlight ((t (:foreground ,red   :background "#3a1a1a" :weight bold))))
-   `(magit-section-heading      ((t (:foreground ,orange :weight bold))))
+   `(magit-diff-added-highlight   ((t (:foreground ,green :background "#1a3a1a"))))
+   `(magit-diff-removed-highlight ((t (:foreground ,red   :background "#3a1a1a"))))
+   `(magit-section-heading      ((t (:foreground ,orange))))
    `(magit-branch-local         ((t (:foreground ,blue))))
    `(magit-branch-remote        ((t (:foreground ,green))))
    `(magit-hash                 ((t (:foreground ,grey))))
@@ -192,7 +212,7 @@
    `(flymake-note    ((t (:underline (:style wave :color ,blue)))))
 
    ;; dired (nvim の NvimTree)
-   `(dired-directory ((t (:foreground ,blue :weight bold))))
+   `(dired-directory ((t (:foreground ,blue))))
    `(dired-symlink   ((t (:foreground ,cyan))))
 
    ;; インデント線 (nvim の IblIndent / IblScope)
@@ -200,21 +220,25 @@
    `(indent-bars-current-face ((t (:foreground ,orange))))
 
    ;; which-key
-   `(which-key-key-face            ((t (:foreground ,orange :weight bold))))
+   `(which-key-key-face            ((t (:foreground ,orange))))
    `(which-key-group-description-face ((t (:foreground ,blue))))
    `(which-key-command-description-face ((t (:foreground ,fg))))
 
    ;; dashboard
-   `(dashboard-heading ((t (:foreground ,orange :weight bold))))
+   `(dashboard-heading ((t (:foreground ,orange))))
    `(dashboard-items-face ((t (:foreground ,fg))))
-   `(dashboard-banner-logo-title ((t (:foreground ,orange :weight bold))))
+   `(dashboard-banner-logo-title ((t (:foreground ,orange))))
 
    ;; minibuffer
-   `(minibuffer-prompt ((t (:foreground ,orange :weight bold))))
+   `(minibuffer-prompt ((t (:foreground ,orange))))
+   ;; 子フレームの枠。浮いていることは影で分かるので枠は描かず
+   ;; (i999rri-child-frame.el)、Emacs が枠のぶんに塗る色を背景に
+   ;; 合わせて見えなくする
+   `(child-frame-border ((t (:background ,bg))))
 
    ;; 補完の注釈まわり。既定のままだと色が付かず、候補と区別できない
    `(completions-annotations     ((t (:foreground ,comment :slant italic))))
-   `(completions-first-difference ((t (:foreground ,orange :weight bold))))
+   `(completions-first-difference ((t (:foreground ,orange))))
    `(corfu-annotations           ((t (:foreground ,comment))))
    `(corfu-deprecated            ((t (:foreground ,light-grey :strike-through t))))
    `(marginalia-file-name        ((t (:foreground ,comment))))
@@ -230,6 +254,8 @@
    `(link                ((t (:foreground ,blue :underline t))))
    `(link-visited        ((t (:foreground ,purple :underline t))))
    `(button              ((t (:foreground ,blue :underline t))))
+   ;; ボタンを押している間。既定は red1 で、テーマから浮いて見える
+   `(widget-button-pressed ((t (:foreground ,orange))))
    `(escape-glyph        ((t (:foreground ,light-orange))))
    `(homoglyph           ((t (:foreground ,light-orange))))
    `(isearch-fail        ((t (:foreground ,white :background ,red))))
@@ -240,8 +266,8 @@
    `(help-key-binding    ((t (:foreground ,orange :background ,dark-grey))))
 
    ;; コンパイル結果 (nvim の Error / WarningMsg に対応)
-   `(compilation-error   ((t (:foreground ,red :weight bold))))
-   `(compilation-warning ((t (:foreground ,yellow-orange :weight bold))))
+   `(compilation-error   ((t (:foreground ,red))))
+   `(compilation-warning ((t (:foreground ,yellow-orange))))
    `(compilation-info    ((t (:foreground ,blue))))))
 
 ;;;###autoload

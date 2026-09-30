@@ -109,5 +109,19 @@ in
 
   environment.variables.BROWSER = "wsl-browser";
 
+  # The fonts the terminal and Emacs use on Windows, for what runs here and
+  # draws its own text (Emacs's host build measures it from the font files).
+  # Sarasa is for Japanese, which Iosevka has none of.
+  fonts.packages = [
+    pkgs.nerd-fonts.iosevka
+    pkgs.sarasa-gothic
+  ];
+
+  # The fonts gathered in one directory as well, /run/current-system/sw/share/X11/fonts,
+  # for what reads font files itself instead of asking fontconfig, as Emacs's host
+  # build does: otherwise they are only in the store, where fontconfig's own
+  # configuration is the only thing that says they are.
+  fonts.fontDir.enable = true;
+
   system.stateVersion = "26.05";
 }
