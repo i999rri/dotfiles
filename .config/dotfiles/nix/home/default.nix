@@ -22,6 +22,16 @@ in
 
   xdg.enable = true;
 
+  # ユーザー向けの CLI。system の environment.systemPackages ではなく home に
+  # 置くのは、ログインユーザーだけが使うもので root には要らないため。
+  # nix/shared/packages.nix (system 側) は設定ファイルが前提とする土台を揃える
+  # 役割なので、そことも分けておく。
+  #
+  #   claude-code  ターミナルで動くコーディングエージェント (コマンド名は claude)
+  home.packages = [
+    pkgs.claude-code
+  ];
+
   # skkeleton (nvim) 用の SKK 基礎辞書。上の方針 (設定ファイルは実体で置く)
   # の例外として store へのリンクにする。読むだけのデータで編集対象ではなく、
   # 4MB の実体をリポジトリに抱えたくもないため。
